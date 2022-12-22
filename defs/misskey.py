@@ -48,12 +48,22 @@ def get_post_time(date: datetime) -> str:
 
 
 def get_content(note: Note) -> str:
+    content = note.content or ""
+    action = "发表"
+    origin = ""
+    show_note = note
+    if note.renote:
+        show_note = note.renote
+        action = "转推"
+        content = note.renote.content or content
+        origin = f"\n<a href=\"{get_user_link(note.renote.author)}\">{note.renote.author.nickname}</a> " \
+                 f"发表于 {get_post_time(note.renote.created_at)}"
     return f"""<b>Misskey Timeline Update</b>
 
-<code>{note.content or ''}</code>
+<code>{content}</code>
 
-<a href=\"{get_user_link(note.author)}\">{note.author.nickname}</a> 发表于 {get_post_time(note.created_at)}
-点赞: {len(note.emojis)} | 回复: {note.replies_count} | 转发: {note.renote_count}"""
+<a href=\"{get_user_link(note.author)}\">{note.author.nickname}</a> {action}于 {get_post_time(note.created_at)}{origin}
+点赞: {len(show_note.emojis)} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
 async def send_text(cid: int, note: Note):
@@ -238,6 +248,9 @@ async def send_update(cid: int, note: Note):
     files = list(note.files)
     if note.reply:
         files.extend(iter(note.reply.files))
+    if note.renote:
+        files.extend(iter(note.renote.files))
+    files = list({f.get("id"): f for f in files}.values())
     match len(files):
         case 0:
             await send_text(cid, note)
