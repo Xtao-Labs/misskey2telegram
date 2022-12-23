@@ -11,7 +11,7 @@ class MisskeyBot(commands.Bot):
         super().__init__()
 
     async def on_ready(self, ws):
-        await Router(ws).connect_channel(["home"])
+        await Router(ws).connect_channel(["main", "home"])
 
     async def on_message(self, note: Note):
         await send_update(admin, note)
