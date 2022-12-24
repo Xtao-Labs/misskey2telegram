@@ -13,6 +13,9 @@ class MisskeyBot(commands.Bot):
     async def on_ready(self, ws):
         await Router(ws).connect_channel(["main", "home"])
 
+    async def on_reconnect(self, ws):
+        await Router(ws).connect_channel(["main", "home"])
+
     async def on_message(self, note: Note):
         await send_update(admin, note)
 
