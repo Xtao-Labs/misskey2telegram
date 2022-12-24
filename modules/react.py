@@ -1,4 +1,4 @@
-from mipac.errors import NoSuchNoteError
+from mipac.errors import NoSuchNoteError, AlreadyReactedError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
@@ -21,6 +21,17 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         )
     except NoSuchNoteError:
         await callback_query.answer("该嘟文不存在", show_alert=True)
+    except AlreadyReactedError:
+        try:
+            await misskey_bot.core.api.reaction.remove(
+                note_id=note_id,
+            )
+            await callback_query.answer("取消表态成功", show_alert=True)
+        except Exception as e:
+            if callback_query.message:
+                await callback_query.message.reply(f"取消表态失败：{e}", quote=True)
+            await callback_query.answer("取消表态失败", show_alert=True)
+        return
     except Exception as e:
         if callback_query.message:
             await callback_query.message.reply(f"表态失败：{e}", quote=True)
