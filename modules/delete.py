@@ -1,4 +1,4 @@
-from mipac.exception import APIError
+from mipac.errors import APIError, NoSuchNoteError
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
@@ -23,5 +23,7 @@ async def delete_command(_: Client, message: Message):
     try:
         await misskey_bot.core.api.note.action.delete(note_id)
         await message.reply("删除成功", quote=True)
+    except NoSuchNoteError:
+        await message.reply("该嘟文不存在", quote=True)
     except APIError as e:
         await message.reply(f"删除失败 {e}", quote=True)
