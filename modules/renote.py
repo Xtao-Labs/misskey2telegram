@@ -1,4 +1,4 @@
-from mipac.errors import NoSuchNoteError
+from mipac.errors import NoSuchRenoteTargetError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
@@ -13,7 +13,7 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         await misskey_bot.core.api.note.action.create_renote(
             note_id=note_id,
         )
-    except NoSuchNoteError:
+    except NoSuchRenoteTargetError:
         await callback_query.answer("该嘟文不存在", show_alert=True)
     except Exception as e:
         if callback_query.message:
