@@ -23,14 +23,21 @@ def gen_button(note: Note, author: str):
     source = get_note_url(note)
     reply_source = get_note_url(note.reply) if note.reply else None
     if reply_source:
-        return InlineKeyboardMarkup([[
+        first_line = [
             InlineKeyboardButton(text="Source", url=source),
             InlineKeyboardButton(text="RSource", url=reply_source),
-            InlineKeyboardButton(text="Author", url=author)]])
+            InlineKeyboardButton(text="Author", url=author),
+        ]
     else:
-        return InlineKeyboardMarkup([[
+        first_line = [
             InlineKeyboardButton(text="Source", url=source),
-            InlineKeyboardButton(text="Author", url=author)]])
+            InlineKeyboardButton(text="Author", url=author),
+        ]
+    second_line = [
+        InlineKeyboardButton(text="🔁", callback_data=f"renote:{note.id}"),
+        InlineKeyboardButton(text="❤️", callback_data=f"react:{note.id}:love"),
+    ]
+    return InlineKeyboardMarkup([first_line, second_line])
 
 
 def get_user_link(user: LiteUser) -> str:
@@ -58,6 +65,7 @@ def get_content(note: Note) -> str:
         content = note.renote.content or content
         origin = f"\n<a href=\"{get_user_link(note.renote.author)}\">{note.renote.author.nickname}</a> " \
                  f"发表于 {get_post_time(note.renote.created_at)}"
+    content = content[:768]
     return f"""<b>Misskey Timeline Update</b>
 
 <code>{content}</code>
@@ -66,10 +74,11 @@ def get_content(note: Note) -> str:
 点赞: {len(show_note.emojis)} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
-async def send_text(cid: int, note: Note):
+async def send_text(cid: int, note: Note, reply_to_message_id: int = None):
     await bot.send_message(
         cid,
         get_content(note),
+        reply_to_message_id=reply_to_message_id,
         reply_markup=gen_button(note, get_user_link(note.author)),
         disable_web_page_preview=True,
     )
@@ -151,18 +160,17 @@ async def send_document(cid: int, file: IDriveFile, note: Note):
     await delete_file(file)
 
 
-async def get_media_group(files: list[IDriveFile], note: Note) -> list:
+async def get_media_group(files: list[IDriveFile]) -> list:
     media_lists = []
-    for ff in range(len(files)):
-        file_url = files[ff].get("url", None)
+    for file_ in files:
+        file_url = file_.get("url", None)
         if not file_url:
             continue
-        file_type = files[ff].get("type", "")
+        file_type = file_.get("type", "")
         if file_type.startswith("image"):
             media_lists.append(
                 InputMediaPhoto(
                     file_url,
-                    caption=get_content(note) if ff == 0 else None,
                     parse_mode=ParseMode.HTML,
                 )
             )
@@ -170,7 +178,6 @@ async def get_media_group(files: list[IDriveFile], note: Note) -> list:
             media_lists.append(
                 InputMediaVideo(
                     file_url,
-                    caption=get_content(note) if ff == 0 else None,
                     parse_mode=ParseMode.HTML,
                 )
             )
@@ -178,15 +185,13 @@ async def get_media_group(files: list[IDriveFile], note: Note) -> list:
             media_lists.append(
                 InputMediaAudio(
                     file_url,
-                    caption=get_content(note) if ff == 0 else None,
                     parse_mode=ParseMode.HTML,
                 )
             )
-        elif file := await fetch_document(files[ff]):
+        elif file := await fetch_document(file_):
             media_lists.append(
                 InputMediaDocument(
                     file,
-                    caption=get_content(note) if ff == 0 else None,
                     parse_mode=ParseMode.HTML,
                 )
             )
@@ -194,10 +199,10 @@ async def get_media_group(files: list[IDriveFile], note: Note) -> list:
 
 
 async def send_group(cid: int, files: list[IDriveFile], note: Note):
-    groups = await get_media_group(files, note)
+    groups = await get_media_group(files)
     if len(groups) == 0:
         return await send_text(cid, note)
-    photo, video, audio, document = [], [], [], []
+    photo, video, audio, document, msg = [], [], [], [], None
     for i in groups:
         if isinstance(i, InputMediaPhoto):
             photo.append(i)
@@ -208,40 +213,43 @@ async def send_group(cid: int, files: list[IDriveFile], note: Note):
         elif isinstance(i, InputMediaDocument):
             document.append(i)
     if video and (audio or document):
-        await bot.send_media_group(
+        msg = await bot.send_media_group(
             cid,
             video,
         )
         if audio:
-            await bot.send_media_group(
+            msg = await bot.send_media_group(
                 cid,
                 audio,
             )
         elif document:
-            await bot.send_media_group(
+            msg = await bot.send_media_group(
                 cid,
                 document,
             )
     elif audio and (photo or document):
-        await bot.send_media_group(
+        msg = await bot.send_media_group(
             cid,
             audio,
         )
         if photo:
-            await bot.send_media_group(
+            msg = await bot.send_media_group(
                 cid,
                 photo,
             )
         elif document:
-            await bot.send_media_group(
+            msg = await bot.send_media_group(
                 cid,
                 document,
             )
     else:
-        await bot.send_media_group(
+        msg = await bot.send_media_group(
             cid,
             groups,
         )
+    if msg and isinstance(msg, list):
+        msg = msg[0]
+    await send_text(cid, note, msg.id if msg else None)
 
 
 async def send_update(cid: int, note: Note):

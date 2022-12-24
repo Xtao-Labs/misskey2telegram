@@ -1,6 +1,6 @@
 git+https://github.com/yupix/MiPA.git
 git+https://github.com/yupix/MiPAC.git
-Pyrogram==2.0.70
+Pyrogram==2.0.73
 tgCrypto==1.2.5
 httpx==0.23.1
 apscheduler==3.9.1
