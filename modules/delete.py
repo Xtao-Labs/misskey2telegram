@@ -2,10 +2,11 @@ from mipac.errors import APIError, NoSuchNoteError
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
+from glover import admin
 from misskey_init import misskey_bot
 
 
-@Client.on_message(filters.incoming & filters.private & filters.text & filters.reply &
+@Client.on_message(filters.incoming & filters.private & filters.text & filters.reply & filters.user(admin) &
                    filters.command(["delete"]))
 async def delete_command(_: Client, message: Message):
     """

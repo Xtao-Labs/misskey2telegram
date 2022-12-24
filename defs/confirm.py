@@ -11,7 +11,7 @@ class ReadySend:
             self,
             content: str,
             reply_id: Optional[str] = None,
-            files: Optional[list[MiFile]] = None,
+            files: Optional[list[str]] = None,
     ):
         self.content = content
         self.reply_id = reply_id

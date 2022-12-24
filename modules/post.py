@@ -1,11 +1,15 @@
 import contextlib
+from os import remove
+
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
 
 from defs.confirm import ReadySend, ready_send
+from glover import admin
+from misskey_init import misskey_bot
 
 
-@Client.on_message(filters.incoming & filters.private & filters.text)
+@Client.on_message(filters.incoming & filters.private & filters.text & filters.user(admin))
 async def post_command(_: Client, message: Message):
     """
         发送新贴或者回复
@@ -17,6 +21,27 @@ async def post_command(_: Client, message: Message):
             note_id = url.split("/")[-1]
     text = message.text.strip()
     need_send = ReadySend(text, note_id)
+    await need_send.confirm(message)
+
+
+@Client.on_message(filters.incoming & filters.private & filters.photo & filters.user(admin))
+async def post_photo_command(_: Client, message: Message):
+    """
+        发送新贴或者回复
+    """
+    note_id = None
+    if message.reply_to_message and message.reply_to_message.reply_markup:
+        with contextlib.suppress(IndexError, AttributeError):
+            url = message.reply_to_message.reply_markup.inline_keyboard[0][0].url
+            note_id = url.split("/")[-1]
+    text = message.caption.strip() if message.caption else ""
+    photo = await message.download()
+    try:
+        file_ = await misskey_bot.core.api.drive.file.action.upload_file(photo)
+    except Exception as e:
+        return await message.reply(f"上传文件失败：{e}", quote=True)
+    need_send = ReadySend(text, note_id, [file_])
+    remove(photo)
     await need_send.confirm(message)
 
 
