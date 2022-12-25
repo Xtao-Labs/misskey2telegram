@@ -15,7 +15,7 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         case _:
             reaction = "❤️"
     try:
-        await misskey_bot.core.api.reaction.add(
+        await misskey_bot.core.api.note.reaction.action.add(
             reaction=reaction,
             note_id=note_id,
         )
@@ -23,7 +23,7 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         await callback_query.answer("该嘟文不存在", show_alert=True)
     except AlreadyReactedError:
         try:
-            await misskey_bot.core.api.reaction.remove(
+            await misskey_bot.core.api.note.reaction.action.remove(
                 note_id=note_id,
             )
             await callback_query.answer("取消表态成功", show_alert=True)

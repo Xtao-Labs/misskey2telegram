@@ -24,12 +24,8 @@ async def translate_callback(_: Client, callback_query: CallbackQuery):
             await callback_query.answer("翻译成功", show_alert=True)
     except NoSuchRenoteTargetError:
         await callback_query.answer("该嘟文不存在", show_alert=True)
-    except APIError as e:
-        if e.code == 204:
-            return await callback_query.answer("该嘟文无法翻译", show_alert=True)
-        if callback_query.message:
-            await callback_query.message.reply(f"翻译失败：{e}", quote=True)
-        await callback_query.answer("翻译失败", show_alert=True)
+    except APIError:
+        return await callback_query.answer("该嘟文无法翻译，可能是无需翻译", show_alert=True)
     except Exception as e:
         if callback_query.message:
             await callback_query.message.reply(f"翻译失败：{e}", quote=True)
