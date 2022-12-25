@@ -1,6 +1,5 @@
 from typing import Optional
 
-from mipac.manager import MiFile
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 from misskey_init import misskey_bot

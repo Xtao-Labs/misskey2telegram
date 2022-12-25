@@ -1,7 +1,7 @@
 import contextlib
 from os import remove
 
-from pyrogram import Client, filters
+from pyrogram import Client, filters, ContinuePropagation
 from pyrogram.types import Message, CallbackQuery
 
 from defs.confirm import ReadySend, ready_send
@@ -20,6 +20,8 @@ async def post_command(_: Client, message: Message):
             url = message.reply_to_message.reply_markup.inline_keyboard[0][0].url
             note_id = url.split("/")[-1]
     text = message.text.strip()
+    if text.startswith("@"):
+        raise ContinuePropagation
     need_send = ReadySend(text, note_id)
     await need_send.confirm(message)
 
