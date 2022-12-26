@@ -28,7 +28,7 @@ def gen_text(user: UserDetailed):
     update_at = parse_time(user.updated_at)
     return template % (
         user.nickname,
-        user.action.action.get_profile_link(),
+        user.api.action.get_profile_link(),
         user.username,
         user.description or "",
         create_at,
@@ -41,7 +41,7 @@ def gen_text(user: UserDetailed):
 
 def gen_button(user: UserDetailed):
     first_line = [
-        InlineKeyboardButton(text="Link", url=user.action.action.get_profile_link()),
+        InlineKeyboardButton(text="Link", url=user.api.action.get_profile_link()),
     ]
     second_line = [
         InlineKeyboardButton(
