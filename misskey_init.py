@@ -4,7 +4,7 @@ from mipac import Note, NotificationFollow, NotificationFollowRequest
 
 from defs.misskey import send_update
 from defs.notice import send_user_followed, send_follow_request, send_follow_request_accept
-from glover import admin, topic_group_id, timeline_topic_id, notice_topic_id
+from glover import admin, topic_group_id, timeline_topic_id
 
 
 class MisskeyBot(commands.Bot):

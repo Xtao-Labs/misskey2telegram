@@ -72,7 +72,7 @@ def get_content(note: Note) -> str:
 <code>{content}</code>
 
 <a href=\"{get_user_link(note.author)}\">{note.author.nickname}</a> {action}于 {get_post_time(note.created_at)}{origin}
-点赞: {len(show_note.emojis)} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
+点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
 async def send_text(cid: int, note: Note, reply_to_message_id: int):
