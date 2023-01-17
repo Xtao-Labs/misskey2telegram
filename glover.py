@@ -12,6 +12,9 @@ misskey_url: str = ""
 misskey_host: str = ""
 misskey_token: str = ""
 admin: int = 0
+topic_group_id: int = 0
+timeline_topic_id: int = 0
+notice_topic_id: int = 0
 
 config = RawConfigParser()
 config.read("config.ini")
@@ -22,6 +25,9 @@ misskey_url = config.get("misskey", "url", fallback=misskey_url)
 misskey_host = config.get("misskey", "host", fallback=misskey_host)
 misskey_token = config.get("misskey", "token", fallback=misskey_token)
 admin = config.getint("misskey", "admin", fallback=admin)
+topic_group_id = config.getint("misskey", "topic_group_id", fallback=topic_group_id)
+timeline_topic_id = config.getint("misskey", "timeline_topic_id", fallback=timeline_topic_id)
+notice_topic_id = config.getint("misskey", "notice_topic_id", fallback=notice_topic_id)
 try:
     ipv6 = strtobool(ipv6)
 except ValueError:

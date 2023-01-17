@@ -4,7 +4,7 @@ from mipac import Note, NotificationFollow, NotificationFollowRequest
 
 from defs.misskey import send_update
 from defs.notice import send_user_followed, send_follow_request, send_follow_request_accept
-from glover import admin
+from glover import admin, topic_group_id, timeline_topic_id, notice_topic_id
 
 
 class MisskeyBot(commands.Bot):
@@ -18,7 +18,7 @@ class MisskeyBot(commands.Bot):
         await Router(ws).connect_channel(["main", "home"])
 
     async def on_note(self, note: Note):
-        await send_update(admin, note)
+        await send_update(topic_group_id or admin, note, timeline_topic_id)
 
     async def on_user_followed(self, notice: NotificationFollow):
         await send_user_followed(notice)

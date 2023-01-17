@@ -6,7 +6,7 @@ from glover import admin
 from misskey_init import misskey_bot
 
 
-@Client.on_message(filters.incoming & filters.private & filters.text & filters.reply & filters.user(admin) &
+@Client.on_message(filters.incoming & filters.text & filters.reply & filters.user(admin) &
                    filters.command(["delete"]))
 async def delete_command(_: Client, message: Message):
     """

@@ -5,11 +5,12 @@ from pyrogram.types import Message, CallbackQuery
 from glover import admin
 
 from defs.search_user import search_user, gen_text, gen_button
+from init import notice_filter
 from misskey_init import misskey_bot
 
 
 # @xxx
-@Client.on_message(filters.incoming & filters.private & filters.regex(r"^@(.*)$") & filters.user(admin))
+@Client.on_message(filters.incoming & notice_filter & filters.regex(r"^@(.*)$") & filters.user(admin))
 async def search_user_command(_: Client, message: Message):
     """
         搜索用户

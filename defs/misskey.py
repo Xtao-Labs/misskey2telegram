@@ -75,7 +75,7 @@ def get_content(note: Note) -> str:
 点赞: {len(show_note.emojis)} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
-async def send_text(cid: int, note: Note, reply_to_message_id: int = None):
+async def send_text(cid: int, note: Note, reply_to_message_id: int):
     await bot.send_message(
         cid,
         get_content(note),
@@ -90,42 +90,45 @@ def deprecated_to_text(func):
         try:
             return await func(*args, **kwargs)
         except MediaEmpty:
-            return await send_text(args[0], args[2])
+            return await send_text(args[0], args[2], args[3])
 
     return wrapper
 
 
 @deprecated_to_text
-async def send_photo(cid: int, url: str, note: Note):
+async def send_photo(cid: int, url: str, note: Note, reply_to_message_id: int):
     if not url:
-        return await send_text(cid, note)
+        return await send_text(cid, note, reply_to_message_id)
     await bot.send_photo(
         cid,
         url,
+        reply_to_message_id=reply_to_message_id,
         caption=get_content(note),
         reply_markup=gen_button(note, get_user_link(note.author)),
     )
 
 
 @deprecated_to_text
-async def send_video(cid: int, url: str, note: Note):
+async def send_video(cid: int, url: str, note: Note, reply_to_message_id: int):
     if not url:
-        return await send_text(cid, note)
+        return await send_text(cid, note, reply_to_message_id)
     await bot.send_video(
         cid,
         url,
+        reply_to_message_id=reply_to_message_id,
         caption=get_content(note),
         reply_markup=gen_button(note, get_user_link(note.author)),
     )
 
 
 @deprecated_to_text
-async def send_audio(cid: int, url: str, note: Note):
+async def send_audio(cid: int, url: str, note: Note, reply_to_message_id: int):
     if not url:
-        return await send_text(cid, note)
+        return await send_text(cid, note, reply_to_message_id)
     await bot.send_audio(
         cid,
         url,
+        reply_to_message_id=reply_to_message_id,
         caption=get_content(note),
         reply_markup=gen_button(note, get_user_link(note.author)),
     )
@@ -148,13 +151,14 @@ async def fetch_document(file: IDriveFile) -> Optional[str]:
 
 
 @deprecated_to_text
-async def send_document(cid: int, file: IDriveFile, note: Note):
+async def send_document(cid: int, file: IDriveFile, note: Note, reply_to_message_id: int):
     file = await fetch_document(file)
     if not file:
-        return await send_text(cid, note)
+        return await send_text(cid, note, reply_to_message_id)
     await bot.send_document(
         cid,
         file,
+        reply_to_message_id=reply_to_message_id,
         caption=get_content(note),
         reply_markup=gen_button(note, get_user_link(note.author)),
     )
@@ -199,10 +203,10 @@ async def get_media_group(files: list[IDriveFile]) -> list:
     return media_lists
 
 
-async def send_group(cid: int, files: list[IDriveFile], note: Note):
+async def send_group(cid: int, files: list[IDriveFile], note: Note, reply_to_message_id: int):
     groups = await get_media_group(files)
     if len(groups) == 0:
-        return await send_text(cid, note)
+        return await send_text(cid, note, reply_to_message_id)
     photo, video, audio, document, msg = [], [], [], [], None
     for i in groups:
         if isinstance(i, InputMediaPhoto):
@@ -217,43 +221,50 @@ async def send_group(cid: int, files: list[IDriveFile], note: Note):
         msg = await bot.send_media_group(
             cid,
             video,
+            reply_to_message_id=reply_to_message_id,
         )
         if audio:
             msg = await bot.send_media_group(
                 cid,
                 audio,
+                reply_to_message_id=reply_to_message_id,
             )
         elif document:
             msg = await bot.send_media_group(
                 cid,
                 document,
+                reply_to_message_id=reply_to_message_id,
             )
     elif audio and (photo or document):
         msg = await bot.send_media_group(
             cid,
             audio,
+            reply_to_message_id=reply_to_message_id,
         )
         if photo:
             msg = await bot.send_media_group(
                 cid,
                 photo,
+                reply_to_message_id=reply_to_message_id,
             )
         elif document:
             msg = await bot.send_media_group(
                 cid,
                 document,
+                reply_to_message_id=reply_to_message_id,
             )
     else:
         msg = await bot.send_media_group(
             cid,
             groups,
+            reply_to_message_id=reply_to_message_id,
         )
     if msg and isinstance(msg, list):
         msg = msg[0]
     await send_text(cid, note, msg.id if msg else None)
 
 
-async def send_update(cid: int, note: Note):
+async def send_update(cid: int, note: Note, topic_id: int = None):
     files = list(note.files)
     if note.reply:
         files.extend(iter(note.reply.files))
@@ -262,18 +273,18 @@ async def send_update(cid: int, note: Note):
     files = list({f.get("id"): f for f in files}.values())
     match len(files):
         case 0:
-            await send_text(cid, note)
+            await send_text(cid, note, topic_id)
         case 1:
             file = files[0]
             file_url = file.get("url", None)
             file_type = file.get("type", "")
             if file_type.startswith("image"):
-                await send_photo(cid, file_url, note)
+                await send_photo(cid, file_url, note, topic_id)
             elif file_type.startswith("video"):
-                await send_video(cid, file_url, note)
+                await send_video(cid, file_url, note, topic_id)
             elif file_type.startswith("audio"):
-                await send_audio(cid, file_url, note)
+                await send_audio(cid, file_url, note, topic_id)
             else:
-                await send_document(cid, file, note)
+                await send_document(cid, file, note, topic_id)
         case _:
-            await send_group(cid, files, note)
+            await send_group(cid, files, note, topic_id)

@@ -6,10 +6,11 @@ from pyrogram.types import Message, CallbackQuery
 
 from defs.confirm import ReadySend, ready_send
 from glover import admin
+from init import timeline_filter
 from misskey_init import misskey_bot
 
 
-@Client.on_message(filters.incoming & filters.private & filters.text & filters.user(admin))
+@Client.on_message(filters.incoming & timeline_filter & filters.text & filters.user(admin))
 async def post_command(_: Client, message: Message):
     """
         发送新贴或者回复
@@ -26,7 +27,7 @@ async def post_command(_: Client, message: Message):
     await need_send.confirm(message)
 
 
-@Client.on_message(filters.incoming & filters.private & filters.photo & filters.user(admin))
+@Client.on_message(filters.incoming & timeline_filter & filters.photo & filters.user(admin))
 async def post_photo_command(_: Client, message: Message):
     """
         发送新贴或者回复
