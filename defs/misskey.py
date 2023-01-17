@@ -264,7 +264,7 @@ async def send_group(cid: int, files: list[IDriveFile], note: Note, reply_to_mes
     await send_text(cid, note, msg.id if msg else None)
 
 
-async def send_update(cid: int, note: Note, topic_id: int = None):
+async def send_update(cid: int, note: Note, topic_id: int):
     files = list(note.files)
     if note.reply:
         files.extend(iter(note.reply.files))

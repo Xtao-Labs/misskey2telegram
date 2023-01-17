@@ -1,10 +1,11 @@
 from mipa.ext import commands
 from mipa.router import Router
-from mipac import Note, NotificationFollow, NotificationFollowRequest
+from mipac import Note, NotificationFollow, NotificationFollowRequest, ChatMessage
 
+from defs.chat import send_chat_message
 from defs.misskey import send_update
 from defs.notice import send_user_followed, send_follow_request, send_follow_request_accept
-from glover import admin, topic_group_id, timeline_topic_id
+from glover import admin, topic_group_id, timeline_topic_id, notice_topic_id
 
 
 class MisskeyBot(commands.Bot):
@@ -28,6 +29,12 @@ class MisskeyBot(commands.Bot):
 
     async def on_follow_request_accept(self, notice: NotificationFollowRequest):
         await send_follow_request_accept(notice)
+
+    async def on_chat(self, message: ChatMessage):
+        await send_chat_message(topic_group_id or admin, message, notice_topic_id)
+
+    async def on_chat_unread_message(self, message: ChatMessage):
+        await message.api.read()
 
 
 misskey_bot = MisskeyBot()

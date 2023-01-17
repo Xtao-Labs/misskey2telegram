@@ -1,3 +1,4 @@
+import contextlib
 from mipac.errors import InternalErrorError, AlreadyFollowingError, FolloweeIsYourselfError
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
@@ -42,6 +43,8 @@ async def follow_user_callback(_: Client, callback_query: CallbackQuery):
         关注/取消关注用户
     """
     user_id = callback_query.matches[0].group(1)
+    button = callback_query.message.reply_markup
+    follow = True
     try:
         await misskey_bot.core.api.follow.action.add(user_id)
         await callback_query.answer("关注成功", show_alert=True)
@@ -51,12 +54,16 @@ async def follow_user_callback(_: Client, callback_query: CallbackQuery):
         try:
             await misskey_bot.core.api.follow.action.remove(user_id)
             await callback_query.answer("取消关注成功", show_alert=True)
+            follow = False
         except Exception as e:
             await callback_query.answer("取消关注失败", show_alert=True)
             await callback_query.message.reply(f"取消关注失败：{e}", quote=True)
-        return
     except FolloweeIsYourselfError:
         await callback_query.answer("不能关注自己", show_alert=True)
     except Exception as e:
         await callback_query.answer("关注失败", show_alert=True)
         await callback_query.message.reply(f"关注失败：{e}", quote=True)
+    if button:
+        with contextlib.suppress(Exception):
+            button.inline_keyboard[1][0].text = "➖" if follow else "➕"
+            await callback_query.message.edit_reply_markup(button)
