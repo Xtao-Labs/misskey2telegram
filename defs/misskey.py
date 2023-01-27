@@ -22,6 +22,7 @@ def get_note_url(note: Note) -> str:
 def gen_button(note: Note, author: str):
     source = get_note_url(note)
     reply_source = get_note_url(note.reply) if note.reply else None
+    renote_id = note.renote_id if note.reply else note.id
     if reply_source:
         first_line = [
             InlineKeyboardButton(text="Source", url=source),
@@ -34,7 +35,7 @@ def gen_button(note: Note, author: str):
             InlineKeyboardButton(text="Author", url=author),
         ]
     second_line = [
-        InlineKeyboardButton(text="🔁", callback_data=f"renote:{note.id}"),
+        InlineKeyboardButton(text="🔁", callback_data=f"renote:{renote_id}"),
         InlineKeyboardButton(text="❤️", callback_data=f"react:{note.id}:love"),
         InlineKeyboardButton(text="🌐", callback_data=f"translate:{note.id}"),
     ]
