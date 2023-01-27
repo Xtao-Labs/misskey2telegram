@@ -2,11 +2,12 @@ from mipac.errors import NoSuchNoteError, AlreadyReactedError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
+from models.filters import timeline_filter
 
 
 # react:note_id:reaction
-@Client.on_callback_query(filters.regex(r"^react:(\w+):(\w+)$"))
+@Client.on_callback_query(filters.regex(r"^react:(\w+):(\w+)$") & timeline_filter)
 async def renote_callback(_: Client, callback_query: CallbackQuery):
     note_id = callback_query.matches[0].group(1)
     match callback_query.matches[0].group(2):
@@ -15,6 +16,7 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         case _:
             reaction = "❤️"
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         await misskey_bot.core.api.note.reaction.action.add(
             reaction=reaction,
             note_id=note_id,
@@ -23,6 +25,7 @@ async def renote_callback(_: Client, callback_query: CallbackQuery):
         await callback_query.answer("该嘟文不存在", show_alert=True)
     except AlreadyReactedError:
         try:
+            misskey_bot = get_misskey_bot(callback_query.from_user.id)
             await misskey_bot.core.api.note.reaction.action.remove(
                 note_id=note_id,
             )

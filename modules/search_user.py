@@ -3,15 +3,13 @@ from mipac.errors import InternalErrorError, AlreadyFollowingError, FolloweeIsYo
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
 
-from glover import admin
-
 from defs.search_user import search_user, gen_text, gen_button
-from init import notice_filter
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
+from models.filters import notice_filter
 
 
 # @xxx
-@Client.on_message(filters.incoming & notice_filter & filters.regex(r"^@(.*)$") & filters.user(admin))
+@Client.on_message(filters.incoming & notice_filter & filters.regex(r"^@(.*)$"))
 async def search_user_command(_: Client, message: Message):
     """
         搜索用户
@@ -21,7 +19,8 @@ async def search_user_command(_: Client, message: Message):
     username = path[0]
     host = path[1] if len(path) > 1 else None
     try:
-        user = await search_user(username, host)
+        misskey_bot = get_misskey_bot(message.from_user.id)
+        user = await search_user(misskey_bot, username, host)
         if not user:
             return await message.reply("没有找到用户", quote=True)
         text, button = gen_text(user), gen_button(user)
@@ -37,7 +36,7 @@ async def search_user_command(_: Client, message: Message):
 
 
 # follow:xxx
-@Client.on_callback_query(filters.regex(r"^follow:(.*)$"))
+@Client.on_callback_query(filters.regex(r"^follow:(.*)$") & notice_filter)
 async def follow_user_callback(_: Client, callback_query: CallbackQuery):
     """
         关注/取消关注用户
@@ -46,12 +45,14 @@ async def follow_user_callback(_: Client, callback_query: CallbackQuery):
     button = callback_query.message.reply_markup
     follow = True
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         await misskey_bot.core.api.follow.action.add(user_id)
         await callback_query.answer("关注成功", show_alert=True)
     except InternalErrorError:
         await callback_query.answer("关注申请未批准，请等待对方同意", show_alert=True)
     except AlreadyFollowingError:
         try:
+            misskey_bot = get_misskey_bot(callback_query.from_user.id)
             await misskey_bot.core.api.follow.action.remove(user_id)
             await callback_query.answer("取消关注成功", show_alert=True)
             follow = False

@@ -2,7 +2,6 @@ from mipac.models.notification import NotificationFollow, NotificationFollowRequ
 from mipac.models.lite.user import LiteUser
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from glover import admin, topic_group_id, notice_topic_id
 from init import bot
 
 user_followed_template = """<b>有人关注了你！</b> <a href="{0}">{1}</a>"""
@@ -62,26 +61,26 @@ def gen_user_link_button(user: LiteUser):
     ]
 
 
-async def send_user_followed(notice: NotificationFollow):
+async def send_user_followed(chat_id: int, notice: NotificationFollow, topic_id: int):
     await bot.send_message(
-        topic_group_id or admin,
+        chat_id,
         user_followed_template.format(
             notice.user.api.action.get_profile_link(),
             notice.user.username,
         ),
-        reply_to_message_id=notice_topic_id,
+        reply_to_message_id=topic_id,
         reply_markup=InlineKeyboardMarkup([gen_user_link_button(notice.user)]),
     )
 
 
-async def send_follow_request(notice: NotificationFollowRequest):
+async def send_follow_request(chat_id: int, notice: NotificationFollowRequest, topic_id: int):
     await bot.send_message(
-        topic_group_id or admin,
+        chat_id,
         follow_request_template.format(
             notice.user.api.action.get_profile_link(),
             notice.user.username,
         ),
-        reply_to_message_id=notice_topic_id,
+        reply_to_message_id=topic_id,
         reply_markup=InlineKeyboardMarkup(
             [
                 gen_user_link_button(notice.user),
@@ -100,26 +99,26 @@ async def send_follow_request(notice: NotificationFollowRequest):
     )
 
 
-async def send_follow_request_accept(notice: NotificationFollowRequest):
+async def send_follow_request_accept(chat_id: int, notice: NotificationFollowRequest, topic_id: int):
     await bot.send_message(
-        topic_group_id or admin,
+        chat_id,
         follow_request_accept_template.format(
             notice.user.api.action.get_profile_link(),
             notice.user.username,
         ),
-        reply_to_message_id=notice_topic_id,
+        reply_to_message_id=topic_id,
         reply_markup=InlineKeyboardMarkup([gen_user_link_button(notice.user)]),
     )
 
 
-async def send_achievement_earned(notice: NotificationAchievement):
+async def send_achievement_earned(chat_id: int, notice: NotificationAchievement, topic_id: int):
     name, desc, note = achievement_map.get(notice.achievement, ("", "", ""))
     await bot.send_message(
-        topic_group_id or admin,
+        chat_id,
         achievement_template.format(
             name,
             desc,
             f"- {note}" if note else "",
         ),
-        reply_to_message_id=notice_topic_id,
+        reply_to_message_id=topic_id,
     )

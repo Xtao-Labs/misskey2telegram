@@ -2,14 +2,16 @@ from mipac.errors import NoSuchRenoteTargetError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
+from models.filters import timeline_filter
 
 
 # renote:note_id
-@Client.on_callback_query(filters.regex(r"^renote:(\w+)$"))
+@Client.on_callback_query(filters.regex(r"^renote:(\w+)$") & timeline_filter)
 async def renote_callback(_: Client, callback_query: CallbackQuery):
     note_id = callback_query.matches[0].group(1)
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         await misskey_bot.core.api.note.action.create_renote(
             note_id=note_id,
         )

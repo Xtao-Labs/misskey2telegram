@@ -3,9 +3,8 @@ from typing import Optional
 
 from mipac import Route
 
-from glover import topic_group_id, admin, notice_topic_id
 from init import bot
-from misskey_init import misskey_bot
+from misskey_init import MisskeyBot
 
 announcement_template = """<b>Misskey Announcement</b>
 
@@ -15,7 +14,8 @@ announcement_template = """<b>Misskey Announcement</b>
 
 
 class Announcement:
-    def __init__(self, data):
+    def __init__(self, data, misskey_bot: MisskeyBot):
+        self.misskey_bot = misskey_bot
         self.id = data["id"]
         self.title = data["title"]
         self.text = data["text"]
@@ -35,35 +35,35 @@ class Announcement:
     async def send_notice(self):
         if not self.image_url:
             await bot.send_message(
-                topic_group_id or admin,
+                self.misskey_bot.tg_user.chat_id,
                 announcement_template.format(
                     self.title,
                     self.text[:1000],
                 ),
-                reply_to_message_id=notice_topic_id,
+                reply_to_message_id=self.misskey_bot.tg_user.notice_topic,
             )
         else:
             await bot.send_photo(
-                topic_group_id or admin,
+                self.misskey_bot.tg_user.chat_id,
                 self.image_url,
                 caption=announcement_template.format(
                     self.title,
                     self.text[:1000],
                 ),
-                reply_to_message_id=notice_topic_id,
+                reply_to_message_id=self.misskey_bot.tg_user.notice_topic,
             )
 
     async def mark_as_read(self):
         data = {
             "announcementId": self.id,
         }
-        await misskey_bot.core.http.request(
+        await self.misskey_bot.core.http.request(
             Route("POST", "/api/i/read-announcement"),
             json=data, auth=True, lower=True,
         )
 
 
-async def get_unread_announcements():
+async def get_unread_announcements(misskey_bot: MisskeyBot):
     data = {
         "limit": 10,
         "withUnreads": True,
@@ -72,4 +72,4 @@ async def get_unread_announcements():
         Route("POST", "/api/announcements"),
         json=data, auth=True, lower=True,
     )
-    return [Announcement(i) for i in req]
+    return [Announcement(i, misskey_bot) for i in req]

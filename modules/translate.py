@@ -2,14 +2,16 @@ from mipac.errors import NoSuchRenoteTargetError, APIError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
+from models.filters import timeline_filter
 
 
 # translate:note_id
-@Client.on_callback_query(filters.regex(r"^translate:(\w+)$"))
+@Client.on_callback_query(filters.regex(r"^translate:(\w+)$") & timeline_filter)
 async def translate_callback(_: Client, callback_query: CallbackQuery):
     note_id = callback_query.matches[0].group(1)
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         result = await misskey_bot.core.api.note.action.translate(
             note_id=note_id,
             target_lang="zh-CN",

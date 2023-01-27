@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, Union
 
+from mipac import File
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
 
 
 class ReadySend:
@@ -10,7 +11,7 @@ class ReadySend:
             self,
             content: str,
             reply_id: Optional[str] = None,
-            files: Optional[list[str]] = None,
+            files: Optional[list[Union[str, File]]] = None,
     ):
         self.content = content
         self.reply_id = reply_id
@@ -29,10 +30,11 @@ class ReadySend:
                 ]
             ),
         )
-        ready_send[msg.id] = self
+        ready_send[(msg.chat.id, msg.id)] = self
 
-    async def send(self, msg: Message):
+    async def send(self, msg: Message, user_id: int):
         try:
+            misskey_bot = get_misskey_bot(user_id)
             await misskey_bot.core.api.note.action.send(
                 content=self.content,
                 reply_id=self.reply_id,
@@ -43,7 +45,7 @@ class ReadySend:
         else:
             await msg.delete()
         finally:
-            del ready_send[msg.id]
+            del ready_send[(msg.chat.id, msg.id)]
 
 
 class ReadySendMessage:
@@ -72,10 +74,11 @@ class ReadySendMessage:
                 ]
             ),
         )
-        ready_send[msg.id] = self
+        ready_send[(msg.chat.id, msg.id)] = self
 
-    async def send(self, msg: Message):
+    async def send(self, msg: Message, user_id: int):
         try:
+            misskey_bot = get_misskey_bot(user_id)
             await misskey_bot.core.api.chat.action.send(
                 text=self.text,
                 user_id=self.user_id,
@@ -87,7 +90,7 @@ class ReadySendMessage:
         else:
             await msg.delete()
         finally:
-            del ready_send[msg.id]
+            del ready_send[(msg.chat.id, msg.id)]
 
 
 ready_send = {}

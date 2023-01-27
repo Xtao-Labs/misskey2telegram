@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from mipac import UserDetailed
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from misskey_init import misskey_bot
+from misskey_init import MisskeyBot
 
 template = """<b>Misskey User Info</b>
 
@@ -52,14 +52,14 @@ def gen_button(user: UserDetailed):
     return InlineKeyboardMarkup([first_line, second_line])
 
 
-async def search_user(username: str, host: str = None) -> Optional[UserDetailed]:
+async def search_user(misskey_bot: MisskeyBot, username: str, host: str = None) -> Optional[UserDetailed]:
     """
         搜索用户
     """
     if host:
-        users = await misskey_bot.core.api.user.action.search_by_username_and_host(username, host, limit=1)
+        users = await misskey_bot.core.api.tg_user.action.search_by_username_and_host(username, host, limit=1)
     else:
         users = []
-        async for user in misskey_bot.core.api.user.action.search(username, limit=1):
+        async for user in misskey_bot.core.api.tg_user.action.search(username, limit=1):
             users.append(user)
     return users[0] if users else None

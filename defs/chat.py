@@ -7,20 +7,20 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from glover import misskey_host
 from init import bot, request
-from scheduler import add_delete_file_job, delete_file
+from models.services.scheduler import add_delete_file_job, delete_file
 
 
 def get_user_link(user: LiteUser) -> str:
     if user.host:
         return f"https://{user.host}/@{user.username}"
-    return f"https://{misskey_host}/@{user.username}"
+    return f"{misskey_host}/@{user.username}"
 
 
 def get_source_link(message: ChatMessage) -> str:
     return (
-        f"https://{misskey_host}/my/messaging/{message.user.username}?cid={message.user.id}"
+        f"{misskey_host}/my/messaging/{message.user.username}?cid={message.user.id}"
         if not message.group and message.user
-        else f"https://{misskey_host}/my/messaging/group/{message.group.id}"
+        else f"{misskey_host}/my/messaging/group/{message.group.id}"
     )
 
 

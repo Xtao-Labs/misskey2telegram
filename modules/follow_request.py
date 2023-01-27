@@ -2,14 +2,16 @@ from mipac.errors import NoSuchUserError, NoFollowRequestError
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery
 
-from misskey_init import misskey_bot
+from misskey_init import get_misskey_bot
+from models.filters import notice_filter
 
 
 # request_accept:user_id
-@Client.on_callback_query(filters.regex(r"^request_accept:(\w+)$"))
+@Client.on_callback_query(filters.regex(r"^request_accept:(\w+)$") & notice_filter)
 async def request_accept_callback(_: Client, callback_query: CallbackQuery):
     user_id = callback_query.matches[0].group(1)
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         await misskey_bot.core.api.follow_request.action.accept(
             user_id=user_id,
         )
@@ -25,10 +27,11 @@ async def request_accept_callback(_: Client, callback_query: CallbackQuery):
 
 
 # request_reject:user_id
-@Client.on_callback_query(filters.regex(r"^request_reject:(\w+)$"))
+@Client.on_callback_query(filters.regex(r"^request_reject:(\w+)$") & notice_filter)
 async def request_reject_callback(_: Client, callback_query: CallbackQuery):
     user_id = callback_query.matches[0].group(1)
     try:
+        misskey_bot = get_misskey_bot(callback_query.from_user.id)
         await misskey_bot.core.api.follow_request.action.reject(
             user_id=user_id,
         )

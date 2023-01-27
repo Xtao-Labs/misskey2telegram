@@ -12,11 +12,11 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedi
 
 from glover import misskey_host
 from init import bot, request
-from scheduler import add_delete_file_job, delete_file
+from models.services.scheduler import add_delete_file_job, delete_file
 
 
 def get_note_url(note: Note) -> str:
-    return note.url or f"https://{misskey_host}/notes/{note.id}"
+    return note.url or f"{misskey_host}/notes/{note.id}"
 
 
 def gen_button(note: Note, author: str):
@@ -44,7 +44,7 @@ def gen_button(note: Note, author: str):
 def get_user_link(user: LiteUser) -> str:
     if user.host:
         return f"https://{user.host}/@{user.username}"
-    return f"https://{misskey_host}/@{user.username}"
+    return f"{misskey_host}/@{user.username}"
 
 
 def get_post_time(date: datetime) -> str:
