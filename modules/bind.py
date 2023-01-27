@@ -8,13 +8,13 @@ from misskey_init import rerun_misskey_bot
 
 async def pre_check(message: Message):
     if not message.from_user:
-        await message.reply("请用普通身份执行命令。", quote=True)
+        await message.reply("请用普通用户身份执行命令。", quote=True)
         return False
     if not getattr(message, "forum_topic", False):
-        await message.reply("请在论坛群组中运行。", quote=True)
+        await message.reply("请在论坛群组中运行此命令。", quote=True)
         return False
     if not message.reply_to_top_message_id:
-        await message.reply("请在子话题中运行。", quote=True)
+        await message.reply("请在子话题中运行此命令。", quote=True)
         return False
     user = await UserAction.get_user_by_id(message.from_user.id)
     if not user:

@@ -6,17 +6,17 @@ from init import bot
 from misskey_init import test_token, rerun_misskey_bot
 from models.services.user import UserAction
 
-des = f"""欢迎使用 {bot.me.first_name}，这是一个用于在 Telegram 上使用 Misskey 的机器人。
+des = f"""欢迎使用 {bot.me.first_name}，这是一个用于在 Telegram 上使用 Misskey 的机器人。按下方教程开始使用：
 
-1. 请先点击下方按钮绑定 Misskey 账号
+1. 点击下方按钮绑定 Misskey 账号
 
 2. 在论坛群组中使用 /bind_timeline 绑定 Timeline 话题，接收时间线更新
 
 3. 在论坛群组中使用 /bind_notice 绑定 Notice 话题，接收通知
 
-4. 使用 /status 查看运行状态
+至此，你便可以在 Telegram 接收 Misskey 消息，同时你可以私聊我使用 /status 查看 Bot 运行状态
 
-此实例支持绑定 {misskey_host} 的 Misskey 账号。"""
+此 Bot 仅支持绑定 {misskey_host} 的 Misskey 账号！"""
 
 
 async def finish_check(message: Message):
@@ -43,7 +43,11 @@ async def start_command(_: Client, message: Message):
             return
         if await test_token(token):
             await UserAction.change_user_token(message.from_user.id, token)
-            await message.reply("Token 验证成功，绑定账号完成。", quote=True)
+            await message.reply(
+                "Token 验证成功，绑定账号完成。\n"
+                "当你撤销此登录时，你可以重新点击按钮授权。",
+                quote=True
+            )
             await finish_check(message)
         else:
             await message.reply("Token 验证失败，请检查 Token 是否正确", quote=True)
