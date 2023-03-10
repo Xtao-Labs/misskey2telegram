@@ -36,7 +36,7 @@ class ReadySend:
         try:
             misskey_bot = get_misskey_bot(user_id)
             await misskey_bot.core.api.note.action.send(
-                content=self.content,
+                content=self.content or None,
                 reply_id=self.reply_id,
                 files=self.files,
             )
@@ -80,7 +80,7 @@ class ReadySendMessage:
         try:
             misskey_bot = get_misskey_bot(user_id)
             await misskey_bot.core.api.chat.action.send(
-                text=self.text,
+                text=self.text or None,
                 user_id=self.user_id,
                 group_id=self.group_id,
                 file_id=self.file_id,

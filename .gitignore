@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 .idea/
+.vscode/
+.devcontainer/
 bot.session*
 config.ini
 data/
