@@ -30,11 +30,10 @@ def gen_url():
     return f"https://{web_domain}/gen?host={misskey_domain}&back_host={web_domain}&username={bot.me.username}"
 
 
-@Client.on_message(filters.incoming & filters.private &
-                   filters.command(["start"]))
+@Client.on_message(filters.incoming & filters.private & filters.command(["start"]))
 async def start_command(_: Client, message: Message):
     """
-        回应 start
+    回应 start
     """
     if len(message.command) == 2:
         token = message.command[1]
@@ -44,9 +43,7 @@ async def start_command(_: Client, message: Message):
         if await test_token(token):
             await UserAction.change_user_token(message.from_user.id, token)
             await message.reply(
-                "Token 验证成功，绑定账号完成。\n"
-                "当你撤销此登录时，你可以重新点击按钮授权。",
-                quote=True
+                "Token 验证成功，绑定账号完成。\n" "当你撤销此登录时，你可以重新点击按钮授权。", quote=True
             )
             await finish_check(message)
         else:
@@ -61,5 +58,5 @@ async def start_command(_: Client, message: Message):
                     InlineKeyboardButton(text="绑定 Misskey 账号", url=gen_url()),
                 ]
             ]
-        )
+        ),
     )

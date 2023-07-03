@@ -18,11 +18,10 @@ help_msg = f"""这里是 Bot 帮助
 更多功能正在开发中，敬请期待！"""
 
 
-@Client.on_message(filters.incoming & filters.private &
-                   filters.command(["help"]))
+@Client.on_message(filters.incoming & filters.private & filters.command(["help"]))
 async def help_command(_: Client, message: Message):
     """
-        回应 help
+    回应 help
     """
     await message.reply(
         help_msg,

@@ -8,10 +8,10 @@ from misskey_init import get_misskey_bot
 
 class ReadySend:
     def __init__(
-            self,
-            content: str,
-            reply_id: Optional[str] = None,
-            files: Optional[list[Union[str, File]]] = None,
+        self,
+        content: str,
+        reply_id: Optional[str] = None,
+        files: Optional[list[Union[str, File]]] = None,
     ):
         self.content = content
         self.reply_id = reply_id
@@ -25,7 +25,7 @@ class ReadySend:
                 [
                     [
                         InlineKeyboardButton(text="发送", callback_data="send"),
-                        InlineKeyboardButton(text="拒绝", callback_data="delete")
+                        InlineKeyboardButton(text="拒绝", callback_data="delete"),
                     ]
                 ]
             ),
@@ -50,11 +50,11 @@ class ReadySend:
 
 class ReadySendMessage:
     def __init__(
-            self,
-            text: str,
-            group: bool = False,
-            uid: Optional[str] = None,
-            file_id: Optional[str] = None,
+        self,
+        text: str,
+        group: bool = False,
+        uid: Optional[str] = None,
+        file_id: Optional[str] = None,
     ):
         self.text = text
         self.user_id = None if group else uid
@@ -69,7 +69,7 @@ class ReadySendMessage:
                 [
                     [
                         InlineKeyboardButton(text="发送", callback_data="chat_send"),
-                        InlineKeyboardButton(text="拒绝", callback_data="delete")
+                        InlineKeyboardButton(text="拒绝", callback_data="delete"),
                     ]
                 ]
             ),

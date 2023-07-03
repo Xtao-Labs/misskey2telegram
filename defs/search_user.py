@@ -2,6 +2,7 @@ from typing import Optional
 
 from datetime import datetime, timedelta
 from mipac import UserDetailed
+from mipac.errors import FailedToResolveRemoteUserError
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from misskey_init import MisskeyBot
@@ -52,12 +53,25 @@ def gen_button(user: UserDetailed):
     return InlineKeyboardMarkup([first_line, second_line])
 
 
-async def search_user(misskey_bot: MisskeyBot, username: str, host: str = None) -> Optional[UserDetailed]:
+async def search_user(
+    misskey_bot: MisskeyBot, username: str, host: str = None
+) -> Optional[UserDetailed]:
     """
-        搜索用户
+    搜索用户
     """
     if host:
-        users = await misskey_bot.core.api.user.action.search_by_username_and_host(username, host, limit=1)
+        users = await misskey_bot.core.api.user.action.search_by_username_and_host(
+            username, host, limit=1
+        )
+        if not users:
+            try:
+                users = [
+                    await misskey_bot.core.api.user.action.get(
+                        username=username, host=host
+                    )
+                ]
+            except FailedToResolveRemoteUserError:
+                pass
     else:
         users = []
         async for user in misskey_bot.core.api.user.action.search(username, limit=1):

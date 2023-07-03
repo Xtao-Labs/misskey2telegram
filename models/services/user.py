@@ -27,18 +27,14 @@ class UserAction:
     async def get_user_if_ok(user_id: int) -> Optional[User]:
         async with sqlite.session() as session:
             session = cast(AsyncSession, session)
-            statement = select(User).where(
-                User.user_id == user_id
-            ).where(
-                User.status == TokenStatusEnum.STATUS_SUCCESS
-            ).where(
-                User.chat_id != 0
-            ).where(
-                User.timeline_topic != 0
-            ).where(
-                User.notice_topic != 0
-            ).where(
-                User.token != ""
+            statement = (
+                select(User)
+                .where(User.user_id == user_id)
+                .where(User.status == TokenStatusEnum.STATUS_SUCCESS)
+                .where(User.chat_id != 0)
+                .where(User.timeline_topic != 0)
+                .where(User.notice_topic != 0)
+                .where(User.token != "")
             )
             results = await session.exec(statement)
             return user[0] if (user := results.first()) else None
@@ -47,16 +43,13 @@ class UserAction:
     async def get_all_token_ok_users() -> list[User]:
         async with sqlite.session() as session:
             session = cast(AsyncSession, session)
-            statement = select(User).where(
-                User.status == TokenStatusEnum.STATUS_SUCCESS
-            ).where(
-                User.chat_id != 0
-            ).where(
-                User.timeline_topic != 0
-            ).where(
-                User.notice_topic != 0
-            ).where(
-                User.token != ""
+            statement = (
+                select(User)
+                .where(User.status == TokenStatusEnum.STATUS_SUCCESS)
+                .where(User.chat_id != 0)
+                .where(User.timeline_topic != 0)
+                .where(User.notice_topic != 0)
+                .where(User.token != "")
             )
             results = await session.exec(statement)
             users = results.all()
@@ -90,7 +83,9 @@ class UserAction:
     async def change_user_token(user_id: int, token: str) -> bool:
         user = await UserAction.get_user_by_id(user_id)
         if not user:
-            user = User(user_id=user_id, token=token, status=TokenStatusEnum.STATUS_SUCCESS)
+            user = User(
+                user_id=user_id, token=token, status=TokenStatusEnum.STATUS_SUCCESS
+            )
         user.token = token
         user.status = TokenStatusEnum.STATUS_SUCCESS
         await UserAction.update_user(user)

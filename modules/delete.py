@@ -6,11 +6,16 @@ from misskey_init import get_misskey_bot
 from models.filters import timeline_filter
 
 
-@Client.on_message(filters.incoming & filters.text & filters.reply & timeline_filter &
-                   filters.command("delete"))
+@Client.on_message(
+    filters.incoming
+    & filters.text
+    & filters.reply
+    & timeline_filter
+    & filters.command("delete")
+)
 async def delete_command(_: Client, message: Message):
     """
-        删除
+    删除
     """
     if not message.reply_to_message:
         return

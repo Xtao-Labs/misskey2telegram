@@ -37,9 +37,9 @@ def gen_button(message: ChatMessage):
 def get_content(message: ChatMessage) -> str:
     content = message.text or ""
     content = content[:768]
-    user = f"<a href=\"{get_user_link(message.user)}\">{message.user.nickname}</a>"
+    user = f'<a href="{get_user_link(message.user)}">{message.user.nickname}</a>'
     if message.group:
-        group = f"<a href=\"{get_source_link(message)}\">{message.group.name}</a>"
+        group = f'<a href="{get_source_link(message)}">{message.group.name}</a>'
         user += f" ( {group} )"
     return f"""<b>Misskey Message</b>
 
@@ -67,7 +67,9 @@ def deprecated_to_text(func):
 
 
 @deprecated_to_text
-async def send_photo(cid: int, url: str, message: ChatMessage, reply_to_message_id: int):
+async def send_photo(
+    cid: int, url: str, message: ChatMessage, reply_to_message_id: int
+):
     if not url:
         return await send_text(cid, message, reply_to_message_id)
     await bot.send_photo(
@@ -80,7 +82,9 @@ async def send_photo(cid: int, url: str, message: ChatMessage, reply_to_message_
 
 
 @deprecated_to_text
-async def send_video(cid: int, url: str, message: ChatMessage, reply_to_message_id: int):
+async def send_video(
+    cid: int, url: str, message: ChatMessage, reply_to_message_id: int
+):
     if not url:
         return await send_text(cid, message, reply_to_message_id)
     await bot.send_video(
@@ -93,7 +97,9 @@ async def send_video(cid: int, url: str, message: ChatMessage, reply_to_message_
 
 
 @deprecated_to_text
-async def send_audio(cid: int, url: str, message: ChatMessage, reply_to_message_id: int):
+async def send_audio(
+    cid: int, url: str, message: ChatMessage, reply_to_message_id: int
+):
     if not url:
         return await send_text(cid, message, reply_to_message_id)
     await bot.send_audio(
@@ -122,7 +128,9 @@ async def fetch_document(file: File) -> Optional[str]:
 
 
 @deprecated_to_text
-async def send_document(cid: int, file: File, message: ChatMessage, reply_to_message_id: int):
+async def send_document(
+    cid: int, file: File, message: ChatMessage, reply_to_message_id: int
+):
     file = await fetch_document(file)
     if not file:
         return await send_text(cid, message, reply_to_message_id)

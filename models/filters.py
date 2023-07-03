@@ -5,7 +5,6 @@ from misskey_init import get_misskey_bot
 
 
 def private_filter(filter_type: str = "timeline"):
-
     async def func(_, __, update: Update):
         if isinstance(update, Message):
             user_id = update.from_user.id if update.from_user else None

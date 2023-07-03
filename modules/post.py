@@ -12,7 +12,7 @@ from models.filters import timeline_filter
 @Client.on_message(filters.incoming & timeline_filter & filters.text)
 async def post_command(_: Client, message: Message):
     """
-        发送新贴或者回复
+    发送新贴或者回复
     """
     note_id = None
     if message.reply_to_message and message.reply_to_message.reply_markup:
@@ -29,7 +29,7 @@ async def post_command(_: Client, message: Message):
 @Client.on_message(filters.incoming & timeline_filter & filters.photo)
 async def post_photo_command(_: Client, message: Message):
     """
-        发送新贴或者回复
+    发送新贴或者回复
     """
     note_id = None
     if message.reply_to_message and message.reply_to_message.reply_markup:
@@ -51,7 +51,7 @@ async def post_photo_command(_: Client, message: Message):
 @Client.on_callback_query(filters.regex("^send$") & timeline_filter)
 async def send_callback(_: Client, callback_query: CallbackQuery):
     """
-        发送
+    发送
     """
     msg = callback_query.message
     if need_send := ready_send.get((msg.chat.id, msg.id), None):
@@ -64,7 +64,7 @@ async def send_callback(_: Client, callback_query: CallbackQuery):
 @Client.on_callback_query(filters.regex("^delete$") & timeline_filter)
 async def delete_callback(_: Client, callback_query: CallbackQuery):
     """
-        删除
+    删除
     """
     if not (need_send := callback_query.message):
         return await callback_query.answer("按钮已过期", show_alert=True)

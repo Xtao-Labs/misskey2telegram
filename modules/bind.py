@@ -28,12 +28,16 @@ async def finish_check(message: Message):
         await message.reply("设置完成，开始链接。", quote=True)
 
 
-@Client.on_message(filters.incoming & filters.group & filters.command(["bind_timeline"]))
+@Client.on_message(
+    filters.incoming & filters.group & filters.command(["bind_timeline"])
+)
 async def bind_timeline_command(_: Client, message: Message):
     if not await pre_check(message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
-    if await UserAction.change_user_timeline(message.from_user.id, message.reply_to_top_message_id):
+    if await UserAction.change_user_timeline(
+        message.from_user.id, message.reply_to_top_message_id
+    ):
         await message.reply("Timeline 绑定成功。", quote=True)
     else:
         await message.reply("Timeline 绑定失败，不能和 Notice 话题相同。", quote=True)
@@ -45,7 +49,9 @@ async def bind_notice_command(_: Client, message: Message):
     if not await pre_check(message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
-    if await UserAction.change_user_notice(message.from_user.id, message.reply_to_top_message_id):
+    if await UserAction.change_user_notice(
+        message.from_user.id, message.reply_to_top_message_id
+    ):
         await message.reply("Notice 话题绑定成功。", quote=True)
     else:
         await message.reply("Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True)

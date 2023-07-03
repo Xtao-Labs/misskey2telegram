@@ -7,8 +7,14 @@ from mipac.types import IDriveFile
 from pyrogram.enums import ParseMode
 from pyrogram.errors import MediaEmpty
 
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo, \
-    InputMediaDocument, InputMediaAudio
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    InputMediaPhoto,
+    InputMediaVideo,
+    InputMediaDocument,
+    InputMediaAudio,
+)
 
 from glover import misskey_host
 from init import bot, request
@@ -65,8 +71,10 @@ def get_content(note: Note) -> str:
         show_note = note.renote
         action = "转推"
         content = note.renote.content or content
-        origin = f"\n<a href=\"{get_user_link(note.renote.author)}\">{note.renote.author.nickname}</a> " \
-                 f"发表于 {get_post_time(note.renote.created_at)}"
+        origin = (
+            f'\n<a href="{get_user_link(note.renote.author)}">{note.renote.author.nickname}</a> '
+            f"发表于 {get_post_time(note.renote.created_at)}"
+        )
     content = content[:768]
     return f"""<b>Misskey Timeline Update</b>
 
@@ -152,7 +160,9 @@ async def fetch_document(file: IDriveFile) -> Optional[str]:
 
 
 @deprecated_to_text
-async def send_document(cid: int, file: IDriveFile, note: Note, reply_to_message_id: int):
+async def send_document(
+    cid: int, file: IDriveFile, note: Note, reply_to_message_id: int
+):
     file = await fetch_document(file)
     if not file:
         return await send_text(cid, note, reply_to_message_id)
@@ -204,7 +214,9 @@ async def get_media_group(files: list[IDriveFile]) -> list:
     return media_lists
 
 
-async def send_group(cid: int, files: list[IDriveFile], note: Note, reply_to_message_id: int):
+async def send_group(
+    cid: int, files: list[IDriveFile], note: Note, reply_to_message_id: int
+):
     groups = await get_media_group(files)
     if len(groups) == 0:
         return await send_text(cid, note, reply_to_message_id)

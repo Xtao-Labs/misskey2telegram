@@ -1,5 +1,9 @@
 from json import load
-from mipac.models.notification import NotificationFollow, NotificationFollowRequest, NotificationAchievement
+from mipac.models.notification import (
+    NotificationFollow,
+    NotificationFollowRequest,
+    NotificationAchievement,
+)
 from mipac.models.lite.user import LiteUser
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -34,7 +38,9 @@ async def send_user_followed(chat_id: int, notice: NotificationFollow, topic_id:
     )
 
 
-async def send_follow_request(chat_id: int, notice: NotificationFollowRequest, topic_id: int):
+async def send_follow_request(
+    chat_id: int, notice: NotificationFollowRequest, topic_id: int
+):
     await bot.send_message(
         chat_id,
         follow_request_template.format(
@@ -54,13 +60,15 @@ async def send_follow_request(chat_id: int, notice: NotificationFollowRequest, t
                         text="Reject",
                         callback_data=f"request_reject:{notice.user.id}",
                     ),
-                ]
+                ],
             ],
         ),
     )
 
 
-async def send_follow_request_accept(chat_id: int, notice: NotificationFollowRequest, topic_id: int):
+async def send_follow_request_accept(
+    chat_id: int, notice: NotificationFollowRequest, topic_id: int
+):
     await bot.send_message(
         chat_id,
         follow_request_accept_template.format(
@@ -72,7 +80,9 @@ async def send_follow_request_accept(chat_id: int, notice: NotificationFollowReq
     )
 
 
-async def send_achievement_earned(chat_id: int, notice: NotificationAchievement, topic_id: int):
+async def send_achievement_earned(
+    chat_id: int, notice: NotificationAchievement, topic_id: int
+):
     name, desc, note = achievement_map.get(notice.achievement, ("", "", ""))
     await bot.send_message(
         chat_id,

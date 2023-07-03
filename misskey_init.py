@@ -6,12 +6,23 @@ from aiohttp import ClientConnectorError
 from mipa.exception import WebSocketNotConnected
 from mipa.ext import commands
 from mipa.router import Router
-from mipac import Note, NotificationFollow, NotificationFollowRequest, ChatMessage, NotificationAchievement
+from mipac import (
+    Note,
+    NotificationFollow,
+    NotificationFollowRequest,
+    ChatMessage,
+    NotificationAchievement,
+)
 from mipac.client import Client as MisskeyClient
 
 from defs.chat import send_chat_message
 from defs.misskey import send_update
-from defs.notice import send_user_followed, send_follow_request, send_follow_request_accept, send_achievement_earned
+from defs.notice import (
+    send_user_followed,
+    send_follow_request,
+    send_follow_request_accept,
+    send_achievement_earned,
+)
 from glover import misskey_url, misskey_host
 
 from models.models.user import User, TokenStatusEnum
@@ -39,26 +50,36 @@ class MisskeyBot(commands.Bot):
 
     async def on_user_followed(self, notice: NotificationFollow):
         if self.tg_user:
-            await send_user_followed(self.tg_user.chat_id, notice, self.tg_user.notice_topic)
+            await send_user_followed(
+                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+            )
 
     async def on_follow_request(self, notice: NotificationFollowRequest):
         if self.tg_user:
-            await send_follow_request(self.tg_user.chat_id, notice, self.tg_user.notice_topic)
+            await send_follow_request(
+                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+            )
 
     async def on_follow_request_accept(self, notice: NotificationFollowRequest):
         if self.tg_user:
-            await send_follow_request_accept(self.tg_user.chat_id, notice, self.tg_user.notice_topic)
+            await send_follow_request_accept(
+                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+            )
 
     async def on_chat(self, message: ChatMessage):
         if self.tg_user:
-            await send_chat_message(self.tg_user.chat_id, message, self.tg_user.notice_topic)
+            await send_chat_message(
+                self.tg_user.chat_id, message, self.tg_user.notice_topic
+            )
 
     async def on_chat_unread_message(self, message: ChatMessage):
         await message.api.read()
 
     async def on_achievement_earned(self, notice: NotificationAchievement):
         if self.tg_user:
-            await send_achievement_earned(self.tg_user.chat_id, notice, self.tg_user.notice_topic)
+            await send_achievement_earned(
+                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+            )
 
 
 misskey_bot_map: dict[int, MisskeyBot] = {}

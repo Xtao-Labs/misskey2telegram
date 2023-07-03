@@ -30,7 +30,11 @@ class Announcement:
 
     @property
     def updated_at(self) -> Optional[datetime]:
-        return datetime.strptime(self._updated_at, "%Y-%m-%dT%H:%M:%S.%fZ") if self._updated_at else None
+        return (
+            datetime.strptime(self._updated_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+            if self._updated_at
+            else None
+        )
 
     async def send_notice(self):
         if not self.image_url:
@@ -59,7 +63,9 @@ class Announcement:
         }
         await self.misskey_bot.core.http.request(
             Route("POST", "/api/i/read-announcement"),
-            json=data, auth=True, lower=True,
+            json=data,
+            auth=True,
+            lower=True,
         )
 
 
@@ -70,6 +76,8 @@ async def get_unread_announcements(misskey_bot: MisskeyBot):
     }
     req = await misskey_bot.core.http.request(
         Route("POST", "/api/announcements"),
-        json=data, auth=True, lower=True,
+        json=data,
+        auth=True,
+        lower=True,
     )
     return [Announcement(i, misskey_bot) for i in req]

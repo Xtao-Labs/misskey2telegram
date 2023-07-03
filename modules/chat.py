@@ -12,10 +12,7 @@ from models.filters import notice_filter
 
 def get_uid(message: Message) -> Tuple[bool, str]:
     group, user, uid = False, None, None
-    if (
-            not message.reply_to_message
-            or not message.reply_to_message.reply_markup
-    ):
+    if not message.reply_to_message or not message.reply_to_message.reply_markup:
         raise ContinuePropagation
     with contextlib.suppress(IndexError, AttributeError):
         url = message.reply_to_message.reply_markup.inline_keyboard[0][0].url
@@ -60,7 +57,7 @@ async def chat_photo_command(_: Client, message: Message):
 @Client.on_callback_query(filters.regex("^chat_send$") & notice_filter)
 async def chat_send_callback(_: Client, callback_query: CallbackQuery):
     """
-        发送
+    发送
     """
     msg = callback_query.message
     if need_send := ready_send.get((msg.chat.id, msg.id), None):

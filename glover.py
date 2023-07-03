@@ -21,16 +21,16 @@ api_id = config.getint("pyrogram", "api_id", fallback=api_id)
 api_hash = config.get("pyrogram", "api_hash", fallback=api_hash)
 ipv6 = config.get("basic", "ipv6", fallback=ipv6)
 misskey_url = config.get("misskey", "url", fallback=misskey_url)
-if origin_url := re.search(r'wss?://(.*)/streaming', misskey_url):
+if origin_url := re.search(r"wss?://(.*)/streaming", misskey_url):
     misskey_host = (
         origin_url[0]
-        .replace('wss', 'https')
-        .replace('ws', 'http')
-        .replace('/streaming', '')
+        .replace("wss", "https")
+        .replace("ws", "http")
+        .replace("/streaming", "")
     )
 else:
     misskey_host = misskey_url
-misskey_domain = re.search(r'https?://(.*)', misskey_host)[1]
+misskey_domain = re.search(r"https?://(.*)", misskey_host)[1]
 web_domain = config.get("misskey", "web_domain", fallback=web_domain)
 admin = config.getint("misskey", "admin", fallback=admin)
 try:

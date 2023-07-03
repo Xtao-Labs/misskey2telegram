@@ -8,11 +8,10 @@ from models.models.user import TokenStatusEnum
 from models.services.user import UserAction
 
 
-@Client.on_message(filters.incoming & filters.private &
-                   filters.command(["status"]))
+@Client.on_message(filters.incoming & filters.private & filters.command(["status"]))
 async def status_command(_: Client, message: Message):
     """
-        回应 status
+    回应 status
     """
     user = await UserAction.get_user_by_id(message.from_user.id)
     if not user:
