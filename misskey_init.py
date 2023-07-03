@@ -21,10 +21,10 @@ from init import bot, logs, sqlite
 
 
 class MisskeyBot(commands.Bot):
-    def __init__(self, user_id: int):
+    def __init__(self, user: User):
         super().__init__()
-        self.user_id: int = user_id
-        self.tg_user: Optional[User] = None
+        self.user_id: int = user.user_id
+        self.tg_user: User = user
 
     async def on_ready(self, ws):
         await Router(ws).connect_channel(["main", "home"])
@@ -60,9 +60,6 @@ class MisskeyBot(commands.Bot):
         if self.tg_user:
             await send_achievement_earned(self.tg_user.chat_id, notice, self.tg_user.notice_topic)
 
-    async def get_user(self):
-        self.tg_user = await UserAction.get_user_if_ok(self.user_id)
-
 
 misskey_bot_map: dict[int, MisskeyBot] = {}
 
@@ -71,15 +68,14 @@ def get_misskey_bot(user_id: int) -> Optional[MisskeyBot]:
     return None if user_id not in misskey_bot_map else misskey_bot_map[user_id]
 
 
-async def create_or_get_misskey_bot(user_id: int) -> MisskeyBot:
-    if user_id not in misskey_bot_map:
-        misskey_bot_map[user_id] = MisskeyBot(user_id)
-        await misskey_bot_map[user_id].get_user()
-    return misskey_bot_map[user_id]
+async def create_or_get_misskey_bot(user: User) -> MisskeyBot:
+    if user.user_id not in misskey_bot_map:
+        misskey_bot_map[user.user_id] = MisskeyBot(user)
+    return misskey_bot_map[user.user_id]
 
 
 async def run(user: User):
-    misskey = await create_or_get_misskey_bot(user.user_id)
+    misskey = await create_or_get_misskey_bot(user)
     try:
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
         await misskey.start(misskey_url, user.token)

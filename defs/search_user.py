@@ -57,9 +57,9 @@ async def search_user(misskey_bot: MisskeyBot, username: str, host: str = None) 
         搜索用户
     """
     if host:
-        users = await misskey_bot.core.api.tg_user.action.search_by_username_and_host(username, host, limit=1)
+        users = await misskey_bot.core.api.user.action.search_by_username_and_host(username, host, limit=1)
     else:
         users = []
-        async for user in misskey_bot.core.api.tg_user.action.search(username, limit=1):
+        async for user in misskey_bot.core.api.user.action.search(username, limit=1):
             users.append(user)
     return users[0] if users else None
