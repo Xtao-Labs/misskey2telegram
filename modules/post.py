@@ -40,11 +40,15 @@ async def post_photo_command(_: Client, message: Message):
     photo = await message.download()
     try:
         misskey_bot = get_misskey_bot(message.from_user.id)
-        file_ = await misskey_bot.core.api.drive.file.action.upload_file(photo)
+        file_ = await misskey_bot.core.api.drive.file.action.upload_file(
+            photo,
+            is_sensitive=message.has_media_spoiler or False,
+        )
     except Exception as e:
         return await message.reply(f"上传文件失败：{e}", quote=True)
+    finally:
+        remove(photo)
     need_send = ReadySend(text, note_id, [file_])
-    remove(photo)
     await need_send.confirm(message)
 
 

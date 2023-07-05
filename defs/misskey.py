@@ -54,6 +54,10 @@ def get_user_link(user: LiteUser) -> str:
     return f"{misskey_host}/@{user.username}"
 
 
+def get_user_alink(user: LiteUser) -> str:
+    return "<a href=\"{}\">{}</a>".format(get_user_link(user), user.nickname or f"@{user.username}")
+
+
 def get_post_time(date: datetime) -> str:
     try:
         date = date + timedelta(hours=8)
@@ -72,7 +76,7 @@ def get_content(note: Note) -> str:
         action = "转推"
         content = note.renote.content or content
         origin = (
-            f'\n<a href="{get_user_link(note.renote.author)}">{note.renote.author.nickname}</a> '
+            f'\n{get_user_alink(note.renote.author)} '
             f"发表于 {get_post_time(note.renote.created_at)}"
         )
     content = content[:768]
@@ -80,7 +84,7 @@ def get_content(note: Note) -> str:
 
 <code>{content}</code>
 
-<a href=\"{get_user_link(note.author)}\">{note.author.nickname}</a> {action}于 {get_post_time(note.created_at)}{origin}
+{get_user_alink(note.author)} {action}于 {get_post_time(note.created_at)}{origin}
 点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
