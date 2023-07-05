@@ -42,8 +42,8 @@ def gen_button(note: Note, author: str):
         ]
     second_line = [
         InlineKeyboardButton(text="🔁", callback_data=f"renote:{renote_id}"),
-        InlineKeyboardButton(text="❤️", callback_data=f"react:{note.id}:love"),
-        InlineKeyboardButton(text="🌐", callback_data=f"translate:{note.id}"),
+        InlineKeyboardButton(text="❤️", callback_data=f"react:{renote_id}:love"),
+        InlineKeyboardButton(text="🌐", callback_data=f"translate:{renote_id}"),
     ]
     return InlineKeyboardMarkup([first_line, second_line])
 
