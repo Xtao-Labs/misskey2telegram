@@ -22,7 +22,7 @@ from models.services.scheduler import add_delete_file_job, delete_file
 
 
 def get_note_url(note: Note) -> str:
-    return note.url or f"{misskey_host}/notes/{note.id}"
+    return f"{misskey_host}/notes/{note.id}"
 
 
 def gen_button(note: Note, author: str):
