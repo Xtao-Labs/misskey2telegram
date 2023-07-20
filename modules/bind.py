@@ -74,13 +74,13 @@ async def bind_push_command(client: Client, message: Message):
         chat = await client.get_chat(push_chat_id)
         if chat.type in [ChatType.SUPERGROUP, ChatType.CHANNEL, ChatType.GROUP]:
             me = await client.get_chat_member(push_chat_id, "me")
-            if not me.is_member:
+            if me.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
                 raise FileExistsError
             you = await client.get_chat_member(push_chat_id, message.from_user.id)
             if you.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
                 raise FileNotFoundError
     except FileExistsError:
-        await message.reply("对话 ID 无效，我不在该对话中。", quote=True)
+        await message.reply("对话 ID 无效，我不是该对话的管理员。", quote=True)
         return
     except FileNotFoundError:
         await message.reply("对话 ID 无效，你不是该对话的管理员。", quote=True)
