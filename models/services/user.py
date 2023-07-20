@@ -35,6 +35,7 @@ class UserAction:
                 .where(User.timeline_topic != 0)
                 .where(User.notice_topic != 0)
                 .where(User.token != "")
+                .where(User.host != "")
             )
             results = await session.exec(statement)
             return user[0] if (user := results.first()) else None
@@ -80,12 +81,22 @@ class UserAction:
         return True
 
     @staticmethod
-    async def change_user_token(user_id: int, token: str) -> bool:
+    async def change_user_host(user_id: int, host: str) -> bool:
         user = await UserAction.get_user_by_id(user_id)
         if not user:
             user = User(
-                user_id=user_id, token=token, status=TokenStatusEnum.STATUS_SUCCESS
+                user_id=user_id, host=host, status=TokenStatusEnum.INVALID_TOKEN
             )
+        user.host = host
+        user.status = TokenStatusEnum.INVALID_TOKEN
+        await UserAction.update_user(user)
+        return True
+
+    @staticmethod
+    async def change_user_token(user_id: int, token: str) -> bool:
+        user = await UserAction.get_user_by_id(user_id)
+        if not user:
+            return False
         user.token = token
         user.status = TokenStatusEnum.STATUS_SUCCESS
         await UserAction.update_user(user)
