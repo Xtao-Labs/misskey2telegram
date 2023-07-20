@@ -45,42 +45,55 @@ class MisskeyBot(commands.Bot):
         await Router(ws).connect_channel(["main", "home"])
 
     async def on_note(self, note: Note):
-        await send_update(
-            self.tg_user.host,
-            self.tg_user.chat_id,
-            note,
-            self.tg_user.timeline_topic,
-            True,
-        )
+        if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
+            await send_update(
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                note,
+                self.tg_user.timeline_topic,
+                True,
+            )
         if note.user_id == self.instance_user_id and self.tg_user.push_chat_id != 0:
             await send_update(
                 self.tg_user.host, self.tg_user.push_chat_id, note, None, False
             )
 
     async def on_user_followed(self, notice: NotificationFollow):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await send_user_followed(
             self.tg_user.chat_id, notice, self.tg_user.notice_topic
         )
 
     async def on_follow_request(self, notice: NotificationFollowRequest):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await send_follow_request(
             self.tg_user.chat_id, notice, self.tg_user.notice_topic
         )
 
     async def on_follow_request_accept(self, notice: NotificationFollowRequest):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await send_follow_request_accept(
             self.tg_user.chat_id, notice, self.tg_user.notice_topic
         )
 
     async def on_chat(self, message: ChatMessage):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await send_chat_message(
             self.tg_user.host, self.tg_user.chat_id, message, self.tg_user.notice_topic
         )
 
     async def on_chat_unread_message(self, message: ChatMessage):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await message.api.read()
 
     async def on_achievement_earned(self, notice: NotificationAchievement):
+        if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
+            return
         await send_achievement_earned(
             self.tg_user.chat_id, notice, self.tg_user.notice_topic
         )
@@ -143,10 +156,12 @@ async def init_misskey_bot():
     await sqlite.create_db_and_tables()
     count = 0
     for user in await UserAction.get_all_token_ok_users():
-        if not await test_token(user.host, user.token):
+        mid = await test_token(user.host, user.token)
+        if not mid:
             user.status = TokenStatusEnum.INVALID_TOKEN
             await UserAction.update_user(user)
             continue
+        user.instance_user_id = mid
         count += 1
         bot.loop.create_task(run(user))
     logs.info(f"初始化 Misskey Bot 完成，共启动 {count} 个 WS 任务")

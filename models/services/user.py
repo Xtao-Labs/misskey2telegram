@@ -24,6 +24,14 @@ class UserAction:
             return user[0] if (user := results.first()) else None
 
     @staticmethod
+    def check_user_if_ok(user: User) -> bool:
+        if user.chat_id != 0 and user.timeline_topic != 0 and user.notice_topic != 0:
+            return True
+        if user.push_chat_id != 0:
+            return True
+        return False
+
+    @staticmethod
     async def get_user_if_ok(user_id: int) -> Optional[User]:
         async with sqlite.session() as session:
             session = cast(AsyncSession, session)
@@ -31,14 +39,14 @@ class UserAction:
                 select(User)
                 .where(User.user_id == user_id)
                 .where(User.status == TokenStatusEnum.STATUS_SUCCESS)
-                .where(User.chat_id != 0)
-                .where(User.timeline_topic != 0)
-                .where(User.notice_topic != 0)
                 .where(User.token != "")
                 .where(User.host != "")
             )
             results = await session.exec(statement)
-            return user[0] if (user := results.first()) else None
+            user = user[0] if (user := results.first()) else None
+            if user is not None and UserAction.check_user_if_ok(user):
+                return user
+            return None
 
     @staticmethod
     async def get_all_token_ok_users() -> list[User]:
@@ -47,14 +55,15 @@ class UserAction:
             statement = (
                 select(User)
                 .where(User.status == TokenStatusEnum.STATUS_SUCCESS)
-                .where(User.chat_id != 0)
-                .where(User.timeline_topic != 0)
-                .where(User.notice_topic != 0)
                 .where(User.token != "")
+                .where(User.host != "")
             )
             results = await session.exec(statement)
-            users = results.all()
-            return [user[0] for user in users]
+            return [
+                user[0]
+                for user in results.all()
+                if UserAction.check_user_if_ok(user[0])
+            ]
 
     @staticmethod
     async def update_user(user: User):
