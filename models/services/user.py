@@ -132,3 +132,25 @@ class UserAction:
         user.notice_topic = notice
         await UserAction.update_user(user)
         return True
+
+    @staticmethod
+    async def change_instance_user_id(user_id: int, instance_user_id: str) -> bool:
+        user = await UserAction.get_user_by_id(user_id)
+        if not user:
+            return False
+        if user.instance_user_id == instance_user_id:
+            return False
+        user.instance_user_id = instance_user_id
+        await UserAction.update_user(user)
+        return True
+
+    @staticmethod
+    async def change_user_push(user_id: int, push_chat_id: int) -> bool:
+        user = await UserAction.get_user_by_id(user_id)
+        if not user:
+            return False
+        if user.push_chat_id == push_chat_id:
+            return False
+        user.push_chat_id = push_chat_id
+        await UserAction.update_user(user)
+        return True

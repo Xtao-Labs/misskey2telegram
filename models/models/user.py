@@ -18,3 +18,5 @@ class User(SQLModel, table=True):
     chat_id: int = Field(default=0, primary_key=True)
     timeline_topic: int = Field(default=0)
     notice_topic: int = Field(default=0)
+    instance_user_id: str = Field(default="")
+    push_chat_id: int = Field(default=0)

@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ChatType, ChatMemberStatus
 from pyrogram.types import Message
 
 from misskey_init import rerun_misskey_bot
@@ -55,3 +56,57 @@ async def bind_notice_command(_: Client, message: Message):
     else:
         await message.reply("Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True)
     await finish_check(message)
+
+
+@Client.on_message(filters.incoming & filters.private & filters.command(["bind_push"]))
+async def bind_push_command(client: Client, message: Message):
+    if len(message.command) != 2:
+        await message.reply(
+            "请使用 /bind_push <对话 ID> 的格式，绑定 Self Timeline Push。", quote=True
+        )
+        return
+    try:
+        push_chat_id = int(message.command[1])
+    except ValueError:
+        await message.reply("对话 ID 必须是数字。", quote=True)
+        return
+    try:
+        chat = await client.get_chat(push_chat_id)
+        if chat.type in [ChatType.SUPERGROUP, ChatType.CHANNEL, ChatType.GROUP]:
+            me = await client.get_chat_member(push_chat_id, "me")
+            if me.status not in [
+                ChatMemberStatus.OWNER,
+                ChatMemberStatus.ADMINISTRATOR,
+            ]:
+                raise FileExistsError
+            you = await client.get_chat_member(push_chat_id, message.from_user.id)
+            if you.status not in [
+                ChatMemberStatus.OWNER,
+                ChatMemberStatus.ADMINISTRATOR,
+            ]:
+                raise FileNotFoundError
+    except FileExistsError:
+        await message.reply("对话 ID 无效，我不是该对话的管理员。", quote=True)
+        return
+    except FileNotFoundError:
+        await message.reply("对话 ID 无效，你不是该对话的管理员。", quote=True)
+        return
+    except Exception:
+        await message.reply("对话 ID 无效。", quote=True)
+        return
+    if await UserAction.change_user_push(message.from_user.id, push_chat_id):
+        await message.reply("Self Timeline Push 对话绑定成功。", quote=True)
+    else:
+        await message.reply("Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True)
+    await finish_check(message)
+
+
+@Client.on_message(
+    filters.incoming & filters.private & filters.command(["unbind_push"])
+)
+async def unbind_push_command(_: Client, message: Message):
+    if await UserAction.get_user_by_id(message.from_user.id):
+        if await UserAction.change_user_push(message.from_user.id, 0):
+            await message.reply("Self Timeline Push 对话解绑成功。", quote=True)
+        else:
+            await message.reply("Self Timeline Push 对话解绑失败，可能没有绑定。", quote=True)
