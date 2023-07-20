@@ -15,6 +15,6 @@ class User(SQLModel, table=True):
     host: str = Field(default="")
     token: str = Field(default="")
     status: TokenStatusEnum = Field(sa_column=Column(Enum(TokenStatusEnum)))
-    chat_id: int = Field(default=0)
+    chat_id: int = Field(default=0, primary_key=True)
     timeline_topic: int = Field(default=0)
     notice_topic: int = Field(default=0)

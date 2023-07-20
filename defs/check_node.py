@@ -1,14 +1,19 @@
-from httpx import URL
+from httpx import URL, InvalidURL
 
 from init import request
 
 
 def get_host(url: str) -> str:
-    url = URL(url)
+    try:
+        url = URL(url)
+    except InvalidURL:
+        return ""
     return url.host
 
 
 async def check_host(host: str) -> bool:
+    if not host:
+        return False
     try:
         req = await request.get(f"https://{host}/.well-known/nodeinfo")
         req.raise_for_status()

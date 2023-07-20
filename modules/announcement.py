@@ -1,7 +1,6 @@
-from models.services.scheduler import scheduler
 from defs.announcement import get_unread_announcements
-
 from misskey_init import misskey_bot_map
+from models.services.scheduler import scheduler
 
 
 @scheduler.scheduled_job("interval", minutes=15, id="check_announcement")

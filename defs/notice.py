@@ -1,10 +1,11 @@
 from json import load
+
+from mipac.models.lite.user import LiteUser
 from mipac.models.notification import (
     NotificationFollow,
     NotificationFollowRequest,
     NotificationAchievement,
 )
-from mipac.models.lite.user import LiteUser
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from init import bot

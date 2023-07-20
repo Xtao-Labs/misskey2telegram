@@ -1,4 +1,5 @@
 import contextlib
+
 from mipac.errors import (
     InternalErrorError,
     AlreadyFollowingError,

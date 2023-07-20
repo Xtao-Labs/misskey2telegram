@@ -94,7 +94,7 @@ async def run(user: User):
     misskey = await create_or_get_misskey_bot(user)
     try:
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
-        await misskey.start(user.host, user.token)
+        await misskey.start(f"wss://{user.host}", user.token)
     except ClientConnectorError:
         await sleep(3)
         await run(user)
@@ -103,7 +103,7 @@ async def run(user: User):
 async def test_token(host: str, token: str) -> bool:
     try:
         logs.info(f"验证 Token {host} {token}")
-        client = MisskeyClient(host, token)
+        client = MisskeyClient(f"https://{host}", token)
         await client.http.login()
         await client.http.close_session()
         return True

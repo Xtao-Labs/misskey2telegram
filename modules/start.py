@@ -1,8 +1,8 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-from glover import web_domain
 from defs.check_node import get_host, check_host
+from glover import web_domain
 from init import bot
 from misskey_init import test_token, rerun_misskey_bot
 from models.services.user import UserAction
