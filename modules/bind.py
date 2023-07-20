@@ -93,3 +93,12 @@ async def bind_push_command(client: Client, message: Message):
     else:
         await message.reply("Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True)
     await finish_check(message)
+
+
+@Client.on_message(filters.incoming & filters.private & filters.command(["unbind_push"]))
+async def unbind_push_command(_: Client, message: Message):
+    if await UserAction.get_user_by_id(message.from_user.id):
+        if await UserAction.change_user_push(message.from_user.id, 0):
+            await message.reply("Self Timeline Push 对话解绑成功。", quote=True)
+        else:
+            await message.reply("Self Timeline Push 对话解绑失败，可能没有绑定。", quote=True)
