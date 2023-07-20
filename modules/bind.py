@@ -1,9 +1,8 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-from models.services.user import UserAction
-
 from misskey_init import rerun_misskey_bot
+from models.services.user import UserAction
 
 
 async def pre_check(message: Message):

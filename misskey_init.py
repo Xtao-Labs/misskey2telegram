@@ -23,7 +23,6 @@ from defs.notice import (
     send_follow_request_accept,
     send_achievement_earned,
 )
-from glover import misskey_url, misskey_host
 
 from models.models.user import User, TokenStatusEnum
 from models.services.user import UserAction
@@ -45,41 +44,37 @@ class MisskeyBot(commands.Bot):
         await Router(ws).connect_channel(["main", "home"])
 
     async def on_note(self, note: Note):
-        if self.tg_user:
-            await send_update(self.tg_user.chat_id, note, self.tg_user.timeline_topic)
+        await send_update(
+            self.tg_user.host, self.tg_user.chat_id, note, self.tg_user.timeline_topic
+        )
 
     async def on_user_followed(self, notice: NotificationFollow):
-        if self.tg_user:
-            await send_user_followed(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
-            )
+        await send_user_followed(
+            self.tg_user.chat_id, notice, self.tg_user.notice_topic
+        )
 
     async def on_follow_request(self, notice: NotificationFollowRequest):
-        if self.tg_user:
-            await send_follow_request(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
-            )
+        await send_follow_request(
+            self.tg_user.chat_id, notice, self.tg_user.notice_topic
+        )
 
     async def on_follow_request_accept(self, notice: NotificationFollowRequest):
-        if self.tg_user:
-            await send_follow_request_accept(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
-            )
+        await send_follow_request_accept(
+            self.tg_user.chat_id, notice, self.tg_user.notice_topic
+        )
 
     async def on_chat(self, message: ChatMessage):
-        if self.tg_user:
-            await send_chat_message(
-                self.tg_user.chat_id, message, self.tg_user.notice_topic
-            )
+        await send_chat_message(
+            self.tg_user.host, self.tg_user.chat_id, message, self.tg_user.notice_topic
+        )
 
     async def on_chat_unread_message(self, message: ChatMessage):
         await message.api.read()
 
     async def on_achievement_earned(self, notice: NotificationAchievement):
-        if self.tg_user:
-            await send_achievement_earned(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
-            )
+        await send_achievement_earned(
+            self.tg_user.chat_id, notice, self.tg_user.notice_topic
+        )
 
 
 misskey_bot_map: dict[int, MisskeyBot] = {}
@@ -99,16 +94,16 @@ async def run(user: User):
     misskey = await create_or_get_misskey_bot(user)
     try:
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
-        await misskey.start(misskey_url, user.token)
+        await misskey.start(f"wss://{user.host}", user.token)
     except ClientConnectorError:
         await sleep(3)
         await run(user)
 
 
-async def test_token(token: str) -> bool:
+async def test_token(host: str, token: str) -> bool:
     try:
-        logs.info(f"验证 Token {token}")
-        client = MisskeyClient(misskey_host, token)
+        logs.info(f"验证 Token {host} {token}")
+        client = MisskeyClient(f"https://{host}", token)
         await client.http.login()
         await client.http.close_session()
         return True
@@ -124,7 +119,7 @@ async def rerun_misskey_bot(user_id: int) -> bool:
     user = await UserAction.get_user_if_ok(user_id)
     if not user:
         return False
-    if not await test_token(user.token):
+    if not await test_token(user.host, user.token):
         await UserAction.set_user_status(user_id, TokenStatusEnum.INVALID_TOKEN)
         return False
     bot.loop.create_task(run(user))
@@ -135,7 +130,7 @@ async def init_misskey_bot():
     await sqlite.create_db_and_tables()
     count = 0
     for user in await UserAction.get_all_token_ok_users():
-        if not await test_token(user.token):
+        if not await test_token(user.host, user.token):
             user.status = TokenStatusEnum.INVALID_TOKEN
             await UserAction.update_user(user)
             continue

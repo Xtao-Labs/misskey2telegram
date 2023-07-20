@@ -6,7 +6,6 @@ from mipac.models.lite import LiteUser
 from mipac.types import IDriveFile
 from pyrogram.enums import ParseMode
 from pyrogram.errors import MediaEmpty
-
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -16,18 +15,17 @@ from pyrogram.types import (
     InputMediaAudio,
 )
 
-from glover import misskey_host
 from init import bot, request
 from models.services.scheduler import add_delete_file_job, delete_file
 
 
-def get_note_url(note: Note) -> str:
-    return f"{misskey_host}/notes/{note.id}"
+def get_note_url(host: str, note: Note) -> str:
+    return f"https://{host}/notes/{note.id}"
 
 
-def gen_button(note: Note, author: str):
-    source = get_note_url(note)
-    reply_source = get_note_url(note.reply) if note.reply else None
+def gen_button(host: str, note: Note, author: str):
+    source = get_note_url(host, note)
+    reply_source = get_note_url(host, note.reply) if note.reply else None
     renote_id = note.renote_id if note.reply else note.id
     if reply_source:
         first_line = [
@@ -48,14 +46,16 @@ def gen_button(note: Note, author: str):
     return InlineKeyboardMarkup([first_line, second_line])
 
 
-def get_user_link(user: LiteUser) -> str:
+def get_user_link(host: str, user: LiteUser) -> str:
     if user.host:
-        return f"https://{user.host}/@{user.username}"
-    return f"{misskey_host}/@{user.username}"
+        return f"https://{host}/@{user.username}@{user.host}"
+    return f"https://{host}/@{user.username}"
 
 
-def get_user_alink(user: LiteUser) -> str:
-    return "<a href=\"{}\">{}</a>".format(get_user_link(user), user.nickname or f"@{user.username}")
+def get_user_alink(host: str, user: LiteUser) -> str:
+    return '<a href="{}">{}</a>'.format(
+        get_user_link(host, user), user.nickname or f"@{user.username}"
+    )
 
 
 def get_post_time(date: datetime) -> str:
@@ -66,7 +66,7 @@ def get_post_time(date: datetime) -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def get_content(note: Note) -> str:
+def get_content(host: str, note: Note) -> str:
     content = note.content or ""
     action = "发表"
     origin = ""
@@ -76,7 +76,7 @@ def get_content(note: Note) -> str:
         action = "转推"
         content = note.renote.content or content
         origin = (
-            f'\n{get_user_alink(note.renote.author)} '
+            f"\n{get_user_alink(host, note.renote.author)} "
             f"发表于 {get_post_time(note.renote.created_at)}"
         )
     content = content[:768]
@@ -84,16 +84,16 @@ def get_content(note: Note) -> str:
 
 <code>{content}</code>
 
-{get_user_alink(note.author)} {action}于 {get_post_time(note.created_at)}{origin}
+{get_user_alink(host, note.author)} {action}于 {get_post_time(note.created_at)}{origin}
 点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
-async def send_text(cid: int, note: Note, reply_to_message_id: int):
+async def send_text(host: str, cid: int, note: Note, reply_to_message_id: int):
     await bot.send_message(
         cid,
-        get_content(note),
+        get_content(host, note),
         reply_to_message_id=reply_to_message_id,
-        reply_markup=gen_button(note, get_user_link(note.author)),
+        reply_markup=gen_button(host, note, get_user_link(host, note.author)),
         disable_web_page_preview=True,
     )
 
@@ -103,47 +103,53 @@ def deprecated_to_text(func):
         try:
             return await func(*args, **kwargs)
         except MediaEmpty:
-            return await send_text(args[0], args[2], args[3])
+            return await send_text(args[0], args[1], args[3], args[4])
 
     return wrapper
 
 
 @deprecated_to_text
-async def send_photo(cid: int, url: str, note: Note, reply_to_message_id: int):
+async def send_photo(
+    host: str, cid: int, url: str, note: Note, reply_to_message_id: int
+):
     if not url:
-        return await send_text(cid, note, reply_to_message_id)
+        return await send_text(host, cid, note, reply_to_message_id)
     await bot.send_photo(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
-        caption=get_content(note),
-        reply_markup=gen_button(note, get_user_link(note.author)),
+        caption=get_content(host, note),
+        reply_markup=gen_button(host, note, get_user_link(host, note.author)),
     )
 
 
 @deprecated_to_text
-async def send_video(cid: int, url: str, note: Note, reply_to_message_id: int):
+async def send_video(
+    host: str, cid: int, url: str, note: Note, reply_to_message_id: int
+):
     if not url:
-        return await send_text(cid, note, reply_to_message_id)
+        return await send_text(host, cid, note, reply_to_message_id)
     await bot.send_video(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
-        caption=get_content(note),
-        reply_markup=gen_button(note, get_user_link(note.author)),
+        caption=get_content(host, note),
+        reply_markup=gen_button(host, note, get_user_link(host, note.author)),
     )
 
 
 @deprecated_to_text
-async def send_audio(cid: int, url: str, note: Note, reply_to_message_id: int):
+async def send_audio(
+    host: str, cid: int, url: str, note: Note, reply_to_message_id: int
+):
     if not url:
-        return await send_text(cid, note, reply_to_message_id)
+        return await send_text(host, cid, note, reply_to_message_id)
     await bot.send_audio(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
-        caption=get_content(note),
-        reply_markup=gen_button(note, get_user_link(note.author)),
+        caption=get_content(host, note),
+        reply_markup=gen_button(host, note, get_user_link(host, note.author)),
     )
 
 
@@ -165,17 +171,17 @@ async def fetch_document(file: IDriveFile) -> Optional[str]:
 
 @deprecated_to_text
 async def send_document(
-    cid: int, file: IDriveFile, note: Note, reply_to_message_id: int
+    host: str, cid: int, file: IDriveFile, note: Note, reply_to_message_id: int
 ):
     file = await fetch_document(file)
     if not file:
-        return await send_text(cid, note, reply_to_message_id)
+        return await send_text(host, cid, note, reply_to_message_id)
     await bot.send_document(
         cid,
         file,
         reply_to_message_id=reply_to_message_id,
-        caption=get_content(note),
-        reply_markup=gen_button(note, get_user_link(note.author)),
+        caption=get_content(host, note),
+        reply_markup=gen_button(host, note, get_user_link(host, note.author)),
     )
     await delete_file(file)
 
@@ -219,11 +225,11 @@ async def get_media_group(files: list[IDriveFile]) -> list:
 
 
 async def send_group(
-    cid: int, files: list[IDriveFile], note: Note, reply_to_message_id: int
+    host: str, cid: int, files: list[IDriveFile], note: Note, reply_to_message_id: int
 ):
     groups = await get_media_group(files)
     if len(groups) == 0:
-        return await send_text(cid, note, reply_to_message_id)
+        return await send_text(host, cid, note, reply_to_message_id)
     photo, video, audio, document, msg = [], [], [], [], None
     for i in groups:
         if isinstance(i, InputMediaPhoto):
@@ -278,10 +284,10 @@ async def send_group(
         )
     if msg and isinstance(msg, list):
         msg = msg[0]
-    await send_text(cid, note, msg.id if msg else None)
+    await send_text(host, cid, note, msg.id if msg else None)
 
 
-async def send_update(cid: int, note: Note, topic_id: int):
+async def send_update(host: str, cid: int, note: Note, topic_id: int):
     files = list(note.files)
     if note.reply:
         files.extend(iter(note.reply.files))
@@ -290,18 +296,18 @@ async def send_update(cid: int, note: Note, topic_id: int):
     files = list({f.get("id"): f for f in files}.values())
     match len(files):
         case 0:
-            await send_text(cid, note, topic_id)
+            await send_text(host, cid, note, topic_id)
         case 1:
             file = files[0]
             file_url = file.get("url", None)
             file_type = file.get("type", "")
             if file_type.startswith("image"):
-                await send_photo(cid, file_url, note, topic_id)
+                await send_photo(host, cid, file_url, note, topic_id)
             elif file_type.startswith("video"):
-                await send_video(cid, file_url, note, topic_id)
+                await send_video(host, cid, file_url, note, topic_id)
             elif file_type.startswith("audio"):
-                await send_audio(cid, file_url, note, topic_id)
+                await send_audio(host, cid, file_url, note, topic_id)
             else:
-                await send_document(cid, file, note, topic_id)
+                await send_document(host, cid, file, note, topic_id)
         case _:
-            await send_group(cid, files, note, topic_id)
+            await send_group(host, cid, files, note, topic_id)

@@ -1,7 +1,8 @@
+from pathlib import Path
+
 from sqlmodel import SQLModel
 
 from models.models.user import User
-from pathlib import Path
 
 __all__ = ["User", "Sqlite"]
 
