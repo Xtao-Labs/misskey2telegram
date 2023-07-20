@@ -88,7 +88,7 @@ async def bind_push_command(client: Client, message: Message):
     except Exception:
         await message.reply("对话 ID 无效。", quote=True)
         return
-    if await UserAction.change_user_push(message.from_user.id, message.chat.id):
+    if await UserAction.change_user_push(message.from_user.id, push_chat_id):
         await message.reply("Self Timeline Push 对话绑定成功。", quote=True)
     else:
         await message.reply("Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True)
