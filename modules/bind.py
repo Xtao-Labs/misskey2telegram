@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ChatType
 from pyrogram.types import Message
 
 from misskey_init import rerun_misskey_bot
@@ -54,4 +55,35 @@ async def bind_notice_command(_: Client, message: Message):
         await message.reply("Notice 话题绑定成功。", quote=True)
     else:
         await message.reply("Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True)
+    await finish_check(message)
+
+
+@Client.on_message(filters.incoming & filters.private & filters.command(["bind_push"]))
+async def bind_push_command(client: Client, message: Message):
+    if len(message.command) != 2:
+        await message.reply(
+            "请使用 /bind_push <对话 ID> 的格式，绑定 Self Timeline Push。", quote=True
+        )
+        return
+    try:
+        push_chat_id = int(message.command[1])
+    except ValueError:
+        await message.reply("对话 ID 必须是数字。", quote=True)
+        return
+    try:
+        chat = await client.get_chat(push_chat_id)
+        if chat.type in [ChatType.SUPERGROUP, ChatType.CHANNEL, ChatType.GROUP]:
+            me = await client.get_chat_member(push_chat_id, "me")
+            if not me.permissions.can_send_messages:
+                raise FileExistsError
+    except FileExistsError:
+        await message.reply("无法在对应的对话中发言。", quote=True)
+        return
+    except Exception:
+        await message.reply("对话 ID 无效。", quote=True)
+        return
+    if await UserAction.change_user_push(message.from_user.id, message.chat.id):
+        await message.reply("Self Timeline Push 对话绑定成功。", quote=True)
+    else:
+        await message.reply("Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True)
     await finish_check(message)

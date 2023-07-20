@@ -1,6 +1,6 @@
 import contextlib
 from asyncio import sleep
-from typing import Optional
+from typing import Optional, Union
 
 from aiohttp import ClientConnectorError
 from mipa.exception import WebSocketNotConnected
@@ -34,6 +34,7 @@ class MisskeyBot(commands.Bot):
     def __init__(self, user: User):
         super().__init__()
         self.user_id: int = user.user_id
+        self.instance_user_id: str = user.instance_user_id
         self.tg_user: User = user
 
     async def on_ready(self, ws):
@@ -45,8 +46,16 @@ class MisskeyBot(commands.Bot):
 
     async def on_note(self, note: Note):
         await send_update(
-            self.tg_user.host, self.tg_user.chat_id, note, self.tg_user.timeline_topic
+            self.tg_user.host,
+            self.tg_user.chat_id,
+            note,
+            self.tg_user.timeline_topic,
+            True,
         )
+        if note.user_id == self.instance_user_id and self.tg_user.push_chat_id != 0:
+            await send_update(
+                self.tg_user.host, self.tg_user.push_chat_id, note, None, False
+            )
 
     async def on_user_followed(self, notice: NotificationFollow):
         await send_user_followed(
@@ -100,13 +109,14 @@ async def run(user: User):
         await run(user)
 
 
-async def test_token(host: str, token: str) -> bool:
+async def test_token(host: str, token: str) -> Union[str, bool]:
     try:
         logs.info(f"验证 Token {host} {token}")
         client = MisskeyClient(f"https://{host}", token)
         await client.http.login()
+        me = await client.api.user.action.get_me()
         await client.http.close_session()
-        return True
+        return me.id
     except Exception:
         return False
 
@@ -119,9 +129,12 @@ async def rerun_misskey_bot(user_id: int) -> bool:
     user = await UserAction.get_user_if_ok(user_id)
     if not user:
         return False
-    if not await test_token(user.host, user.token):
+    mid = await test_token(user.host, user.token)
+    if not mid:
         await UserAction.set_user_status(user_id, TokenStatusEnum.INVALID_TOKEN)
         return False
+    user.instance_user_id = mid
+    await UserAction.change_instance_user_id(user_id, mid)
     bot.loop.create_task(run(user))
     return True
 
