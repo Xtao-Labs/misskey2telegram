@@ -17,6 +17,7 @@ from pyrogram.types import (
     InputMediaAudio,
 )
 
+from defs.image import webp_to_png
 from init import bot, request
 from models.services.scheduler import add_delete_file_job, delete_file
 
@@ -128,8 +129,13 @@ async def fetch_document(file: IDriveFile) -> Optional[str]:
     req = await request.get(file_url)
     if req.status_code != 200:
         return file_url
+    if file_name.lower().endswith(".webp"):
+        file_name = file_name[:-5] + ".jpg"
+        io = webp_to_png(req.content).getvalue()
+    else:
+        io = req.content
     async with aiofiles.open(file_name, "wb") as f:
-        await f.write(req.content)
+        await f.write(io)
     add_delete_file_job(file_name)
     return file_name
 

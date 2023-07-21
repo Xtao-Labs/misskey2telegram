@@ -41,6 +41,7 @@ async def bind_timeline_command(_: Client, message: Message):
         await message.reply("Timeline 绑定成功。", quote=True)
     else:
         await message.reply("Timeline 绑定失败，不能和 Notice 话题相同。", quote=True)
+        return
     await finish_check(message)
 
 
@@ -55,6 +56,7 @@ async def bind_notice_command(_: Client, message: Message):
         await message.reply("Notice 话题绑定成功。", quote=True)
     else:
         await message.reply("Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True)
+        return
     await finish_check(message)
 
 
