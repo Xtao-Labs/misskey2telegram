@@ -371,12 +371,12 @@ async def send_update(
             file_type = file.type
             url = await fetch_document(file)
             if file_type.startswith("image"):
-                return await send_photo(host, cid, url, note, topic_id, show_second)
+                return [await send_photo(host, cid, url, note, topic_id, show_second)]
             elif file_type.startswith("video"):
-                return await send_video(host, cid, url, note, topic_id, show_second)
+                return [await send_video(host, cid, url, note, topic_id, show_second)]
             elif file_type.startswith("audio"):
-                return await send_audio(host, cid, url, note, topic_id, show_second)
+                return [await send_audio(host, cid, url, note, topic_id, show_second)]
             else:
-                return await send_document(host, cid, url, note, topic_id, show_second)
+                return [await send_document(host, cid, url, note, topic_id, show_second)]
         case _:
             return await send_group(host, cid, files, note, topic_id, show_second)
