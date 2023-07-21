@@ -119,7 +119,7 @@ async def run(user: User):
         await misskey.start(f"wss://{user.host}/streaming", user.token)
     except ClientConnectorError:
         await sleep(3)
-        await run(user)
+        bot.loop.create_task(run(user))
 
 
 async def test_token(host: str, token: str) -> Union[str, bool]:

@@ -57,8 +57,10 @@ async def change_host(message: Message, token_or_host: str):
 async def change_token(message: Message, token_or_host: str):
     if user := await UserAction.get_user_by_id(message.from_user.id):
         if user.host:
-            if await test_token(user.host, token_or_host):
+            me = await test_token(user.host, token_or_host)
+            if me:
                 await UserAction.change_user_token(message.from_user.id, token_or_host)
+                await UserAction.change_instance_user_id(message.from_user.id, me)
                 await message.reply(
                     "Token 验证成功，绑定账号完成。\n当你撤销此登录时，你可以重新点击按钮授权。", quote=True
                 )
