@@ -15,8 +15,7 @@ help_msg = f"""这里是 Bot 帮助
 
 6. 你可以在 Notice Topic 中发送 @username@hostname 或者 @username 来查找用户，对用户进行关注、取消关注操作
 
-7. 请注意：BOT 会持续监听帖子 2 小时，如果 2 小时内删帖则会同步删除 Telegram 推送，使用
-
+7. 请注意：BOT 会持续监听帖子 2 小时，如果 2 小时内删帖则会同步删除 Telegram 推送
 
 更多功能正在开发中，敬请期待！"""
 
