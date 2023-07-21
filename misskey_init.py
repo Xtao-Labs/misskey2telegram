@@ -118,7 +118,7 @@ async def run(user: User):
     misskey = await create_or_get_misskey_bot(user)
     try:
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
-        await misskey.start(f"wss://{user.host}/streaming", user.token)
+        await misskey.start(f"wss://{user.host}/streaming", user.token, log_level=None)
     except ClientConnectorError:
         logs.warning(f"Misskey Bot WS 任务 {user.user_id} 掉线重连")
         await sleep(3)
@@ -128,7 +128,7 @@ async def run(user: User):
 async def test_token(host: str, token: str) -> Union[str, bool]:
     try:
         logs.info(f"验证 Token {host} {token}")
-        client = MisskeyClient(f"https://{host}", token)
+        client = MisskeyClient(f"https://{host}", token, log_level=None)
         await client.http.login()
         me = await client.api.user.action.get_me()
         await client.http.close_session()

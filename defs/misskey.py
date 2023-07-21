@@ -29,7 +29,7 @@ def get_note_url(host: str, note: Note) -> str:
 def gen_button(host: str, note: Note, author: str, show_second: bool):
     source = get_note_url(host, note)
     reply_source = get_note_url(host, note.reply) if note.reply else None
-    renote_id = note.renote_id if note.reply else note.id
+    renote_id = note.renote_id or note.id
     if reply_source:
         first_line = [
             InlineKeyboardButton(text="Source", url=source),
@@ -86,10 +86,19 @@ def get_content(host: str, note: Note) -> str:
             f"\n{get_user_alink(host, note.renote.author)} "
             f"发表于 {get_post_time(note.renote.created_at)}"
         )
+    if note.reply:
+        show_note = note.reply
+        action = "回复"
+        if note.reply.content:
+            content = f"> {note.reply.content}\n\n{content}"
+        origin = (
+            f"\n{get_user_alink(host, note.reply.author)} "
+            f"发表于 {get_post_time(note.reply.created_at)}"
+        )
     content = content[:768]
     return f"""<b>Misskey Timeline Update</b>
 
-<code>{content}</code>
+{content}
 
 {get_user_alink(host, note.author)} {action}于 {get_post_time(note.created_at)}{origin}
 点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
