@@ -1,5 +1,5 @@
 import contextlib
-from asyncio import sleep
+from asyncio import sleep, Lock
 from typing import Optional, Union
 
 from aiohttp import ClientConnectorError
@@ -12,6 +12,7 @@ from mipac import (
     NotificationFollowRequest,
     ChatMessage,
     NotificationAchievement,
+    NoteDeleted,
 )
 from mipac.client import Client as MisskeyClient
 
@@ -25,6 +26,7 @@ from defs.notice import (
 )
 
 from models.models.user import User, TokenStatusEnum
+from models.services.revoke import RevokeAction
 from models.services.user import UserAction
 
 from init import bot, logs, sqlite
@@ -36,29 +38,46 @@ class MisskeyBot(commands.Bot):
         self.user_id: int = user.user_id
         self.instance_user_id: str = user.instance_user_id
         self.tg_user: User = user
+        self.lock = Lock()
+
+    async def when_start(self, ws):
+        await Router(ws).connect_channel(["main", "home"])
+        subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
+        for sub in subs:
+            await Router(ws).capture_message(sub)
 
     async def on_ready(self, ws):
-        await Router(ws).connect_channel(["main", "home"])
+        await self.when_start(ws)
         logs.info(f"成功启动 Misskey Bot WS 任务 {self.user_id}")
 
     async def on_reconnect(self, ws):
-        await Router(ws).connect_channel(["main", "home"])
+        await self.when_start(ws)
+        logs.info(f"成功重连 Misskey Bot WS 任务 {self.user_id}")
 
     async def on_note(self, note: Note):
         logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
-        if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
-            await send_update(
-                self.tg_user.host,
-                self.tg_user.chat_id,
-                note,
-                self.tg_user.timeline_topic,
-                True,
-            )
-        if note.user_id == self.instance_user_id and self.tg_user.push_chat_id != 0:
-            await send_update(
-                self.tg_user.host, self.tg_user.push_chat_id, note, None, False
-            )
+        async with self.lock:
+            if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
+                msgs = await send_update(
+                    self.tg_user.host,
+                    self.tg_user.chat_id,
+                    note,
+                    self.tg_user.timeline_topic,
+                    True,
+                )
+                await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+            if note.user_id == self.instance_user_id and self.tg_user.push_chat_id != 0:
+                msgs = await send_update(
+                    self.tg_user.host, self.tg_user.push_chat_id, note, None, False
+                )
+                await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
         logs.info(f"{self.tg_user.user_id} 处理 note {note.id} 完成")
+
+    async def on_note_deleted(self, note: NoteDeleted):
+        logs.info(f"{self.tg_user.user_id} 收到 note 删除 {note.note_id}")
+        async with self.lock:
+            await RevokeAction.process_delete_note(self.tg_user.user_id, note.note_id)
+        logs.info(f"{self.tg_user.user_id} 处理 note 删除 {note.note_id} 完成")
 
     async def on_user_followed(self, notice: NotificationFollow):
         if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:

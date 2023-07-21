@@ -1,19 +1,23 @@
-from logging import getLogger, INFO, ERROR, StreamHandler, basicConfig, CRITICAL, Formatter
+from logging import getLogger, INFO, StreamHandler, basicConfig, CRITICAL, Formatter
 
 import httpx
 import pyrogram
 
+from cashews import cache
+
 from models.fix_topic import fix_topic
-from glover import api_id, api_hash, ipv6
+from glover import api_id, api_hash, ipv6, cache_uri
 from models.services.scheduler import scheduler
 from models.sqlite import Sqlite
 
+# Set Cache
+cache.setup(cache_uri)
 # Enable logging
 logs = getLogger(__name__)
 logging_handler = StreamHandler()
-dt_fmt = '%Y-%m-%d %H:%M:%S'
+dt_fmt = "%Y-%m-%d %H:%M:%S"
 formatter = Formatter(
-    '[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{'
+    "[{asctime}] [{levelname:<8}] {name}: {message}", dt_fmt, style="{"
 )
 logging_handler.setFormatter(formatter)
 root_logger = getLogger()

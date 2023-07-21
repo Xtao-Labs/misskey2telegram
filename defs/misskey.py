@@ -1,11 +1,10 @@
 import contextlib
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, List
 
 import aiofiles as aiofiles
-from mipac import Note
+from mipac import Note, File
 from mipac.models.lite import LiteUser
-from mipac.types import IDriveFile
 from pyrogram.enums import ParseMode
 from pyrogram.errors import MediaEmpty
 from pyrogram.types import (
@@ -15,6 +14,7 @@ from pyrogram.types import (
     InputMediaVideo,
     InputMediaDocument,
     InputMediaAudio,
+    Message,
 )
 
 from defs.image import webp_to_png
@@ -106,8 +106,8 @@ def get_content(host: str, note: Note) -> str:
 
 async def send_text(
     host: str, cid: int, note: Note, reply_to_message_id: int, show_second: bool
-):
-    await bot.send_message(
+) -> Message:
+    return await bot.send_message(
         cid,
         get_content(host, note),
         reply_to_message_id=reply_to_message_id,
@@ -128,10 +128,10 @@ def deprecated_to_text(func):
     return wrapper
 
 
-async def fetch_document(file: IDriveFile) -> Optional[str]:
-    file_name = "downloads/" + file.get("name", "file")
-    file_url = file.get("url", None)
-    if file.get("size", 0) > 10 * 1024 * 1024:
+async def fetch_document(file: File) -> Optional[str]:
+    file_name = "downloads/" + file.name
+    file_url = file.url
+    if file.size > 10 * 1024 * 1024:
         return file_url
     if not file_url:
         return file_url
@@ -157,10 +157,10 @@ async def send_photo(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
-):
+) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
-    await bot.send_photo(
+    return await bot.send_photo(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
@@ -179,10 +179,10 @@ async def send_video(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
-):
+) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
-    await bot.send_video(
+    return await bot.send_video(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
@@ -201,10 +201,10 @@ async def send_audio(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
-):
+) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
-    await bot.send_audio(
+    return await bot.send_audio(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
@@ -223,10 +223,10 @@ async def send_document(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
-):
+) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
-    await bot.send_document(
+    msg = await bot.send_document(
         cid,
         url,
         reply_to_message_id=reply_to_message_id,
@@ -237,15 +237,16 @@ async def send_document(
     )
     with contextlib.suppress(Exception):
         await delete_file(url)
+    return msg
 
 
-async def get_media_group(files: list[IDriveFile]) -> list:
+async def get_media_group(files: list[File]) -> list:
     media_lists = []
     for file_ in files:
-        file_url = file_.get("url", None)
+        file_url = file_.url
         if not file_url:
             continue
-        file_type = file_.get("type", "")
+        file_type = file_.type
         if file_type.startswith("image"):
             media_lists.append(
                 InputMediaPhoto(
@@ -280,14 +281,14 @@ async def get_media_group(files: list[IDriveFile]) -> list:
 async def send_group(
     host: str,
     cid: int,
-    files: list[IDriveFile],
+    files: list[File],
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
-):
+) -> List[Message]:
     groups = await get_media_group(files)
     if len(groups) == 0:
-        return await send_text(host, cid, note, reply_to_message_id, show_second)
+        return [await send_text(host, cid, note, reply_to_message_id, show_second)]
     photo, video, audio, document, msg = [], [], [], [], None
     for i in groups:
         if isinstance(i, InputMediaPhoto):
@@ -341,33 +342,41 @@ async def send_group(
             reply_to_message_id=reply_to_message_id,
         )
     if msg and isinstance(msg, list):
-        msg = msg[0]
-    await send_text(host, cid, note, msg.id if msg else None, show_second)
+        msg_ids = msg
+    elif msg:
+        msg_ids = [msg]
+    else:
+        msg_ids = []
+    tmsg = await send_text(
+        host, cid, note, msg_ids[0].id if msg_ids else None, show_second
+    )
+    if tmsg:
+        msg_ids.append(tmsg)
+    return msg_ids
 
 
 async def send_update(
     host: str, cid: int, note: Note, topic_id: Optional[int], show_second: bool
-):
+) -> List[Message]:
     files = list(note.files)
     if note.reply:
         files.extend(iter(note.reply.files))
     if note.renote:
         files.extend(iter(note.renote.files))
-    files = list({f.get("id"): f for f in files}.values())
     match len(files):
         case 0:
-            await send_text(host, cid, note, topic_id, show_second)
+            return [await send_text(host, cid, note, topic_id, show_second)]
         case 1:
             file = files[0]
-            file_type = file.get("type", "")
+            file_type = file.type
             url = await fetch_document(file)
             if file_type.startswith("image"):
-                await send_photo(host, cid, url, note, topic_id, show_second)
+                return await send_photo(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("video"):
-                await send_video(host, cid, url, note, topic_id, show_second)
+                return await send_video(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("audio"):
-                await send_audio(host, cid, url, note, topic_id, show_second)
+                return await send_audio(host, cid, url, note, topic_id, show_second)
             else:
-                await send_document(host, cid, url, note, topic_id, show_second)
+                return await send_document(host, cid, url, note, topic_id, show_second)
         case _:
-            await send_group(host, cid, files, note, topic_id, show_second)
+            return await send_group(host, cid, files, note, topic_id, show_second)
