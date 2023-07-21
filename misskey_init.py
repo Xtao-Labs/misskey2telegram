@@ -45,6 +45,7 @@ class MisskeyBot(commands.Bot):
         await Router(ws).connect_channel(["main", "home"])
 
     async def on_note(self, note: Note):
+        logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
         if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
             await send_update(
                 self.tg_user.host,
@@ -57,6 +58,7 @@ class MisskeyBot(commands.Bot):
             await send_update(
                 self.tg_user.host, self.tg_user.push_chat_id, note, None, False
             )
+        logs.info(f"{self.tg_user.user_id} 处理 note {note.id} 完成")
 
     async def on_user_followed(self, notice: NotificationFollow):
         if self.tg_user.chat_id == 0 or self.tg_user.notice_topic == 0:
@@ -118,6 +120,7 @@ async def run(user: User):
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
         await misskey.start(f"wss://{user.host}/streaming", user.token)
     except ClientConnectorError:
+        logs.warning(f"Misskey Bot WS 任务 {user.user_id} 掉线重连")
         await sleep(3)
         bot.loop.create_task(run(user))
 
@@ -131,6 +134,7 @@ async def test_token(host: str, token: str) -> Union[str, bool]:
         await client.http.close_session()
         return me.id
     except Exception:
+        logs.warning(f"Token {host} {token} 验证失败")
         return False
 
 
@@ -158,6 +162,7 @@ async def init_misskey_bot():
     for user in await UserAction.get_all_token_ok_users():
         mid = await test_token(user.host, user.token)
         if not mid:
+            logs.warning(f"{user.user_id} Token 失效")
             user.status = TokenStatusEnum.INVALID_TOKEN
             await UserAction.update_user(user)
             continue
