@@ -1,6 +1,8 @@
+import contextlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import aiofiles as aiofiles
 from mipac import Note
 from mipac.models.lite import LiteUser
 from mipac.types import IDriveFile
@@ -116,6 +118,22 @@ def deprecated_to_text(func):
     return wrapper
 
 
+async def fetch_document(file: IDriveFile) -> Optional[str]:
+    file_name = "downloads/" + file.get("name", "file")
+    file_url = file.get("url", None)
+    if file.get("size", 0) > 10 * 1024 * 1024:
+        return file_url
+    if not file_url:
+        return file_url
+    req = await request.get(file_url)
+    if req.status_code != 200:
+        return file_url
+    async with aiofiles.open(file_name, "wb") as f:
+        await f.write(req.content)
+    add_delete_file_job(file_name)
+    return file_name
+
+
 @deprecated_to_text
 async def send_photo(
     host: str,
@@ -182,44 +200,28 @@ async def send_audio(
     )
 
 
-async def fetch_document(file: IDriveFile) -> Optional[str]:
-    file_name = "downloads/" + file.get("name", "file")
-    file_url = file.get("url", None)
-    if file.get("size", 0) > 10 * 1024 * 1024:
-        return file_url
-    if not file_url:
-        return file_url
-    req = await request.get(file_url)
-    if req.status_code != 200:
-        return file_url
-    with open(file_name, "wb") as f:
-        f.write(req.content)
-    add_delete_file_job(file_name)
-    return file_name
-
-
 @deprecated_to_text
 async def send_document(
     host: str,
     cid: int,
-    file: IDriveFile,
+    url: str,
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
 ):
-    file = await fetch_document(file)
-    if not file:
+    if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
     await bot.send_document(
         cid,
-        file,
+        url,
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
             host, note, get_user_link(host, note.author), show_second
         ),
     )
-    await delete_file(file)
+    with contextlib.suppress(Exception):
+        await delete_file(url)
 
 
 async def get_media_group(files: list[IDriveFile]) -> list:
@@ -342,15 +344,15 @@ async def send_update(
             await send_text(host, cid, note, topic_id, show_second)
         case 1:
             file = files[0]
-            file_url = file.get("url", None)
             file_type = file.get("type", "")
+            url = await fetch_document(file)
             if file_type.startswith("image"):
-                await send_photo(host, cid, file_url, note, topic_id, show_second)
+                await send_photo(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("video"):
-                await send_video(host, cid, file_url, note, topic_id, show_second)
+                await send_video(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("audio"):
-                await send_audio(host, cid, file_url, note, topic_id, show_second)
+                await send_audio(host, cid, url, note, topic_id, show_second)
             else:
-                await send_document(host, cid, file, note, topic_id, show_second)
+                await send_document(host, cid, url, note, topic_id, show_second)
         case _:
             await send_group(host, cid, files, note, topic_id, show_second)
