@@ -1,4 +1,5 @@
 import contextlib
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
@@ -20,6 +21,8 @@ from pyrogram.types import (
 from defs.image import webp_to_png
 from init import bot, request
 from models.services.scheduler import add_delete_file_job, delete_file
+
+at_parse = re.compile(r"(?<!\S)@(\S+)\s")
 
 
 def get_note_url(host: str, note: Note) -> str:
@@ -73,6 +76,11 @@ def get_post_time(date: datetime) -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
+def format_at(host: str, content: str) -> str:
+    replaced = rf'<a href="https://{host}/@\1">@\1</a> '
+    return at_parse.sub(replaced, content)
+
+
 def get_content(host: str, note: Note) -> str:
     content = note.content or ""
     action = "发表"
@@ -95,7 +103,7 @@ def get_content(host: str, note: Note) -> str:
             f"\n{get_user_alink(host, note.reply.author)} "
             f"发表于 {get_post_time(note.reply.created_at)}"
         )
-    content = content[:768]
+    content = format_at(host, content[:768])
     return f"""<b>Misskey Timeline Update</b>
 
 {content}
