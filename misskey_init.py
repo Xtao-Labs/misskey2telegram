@@ -54,6 +54,17 @@ class MisskeyBot(commands.Bot):
         await self.when_start(ws)
         logs.info(f"成功重连 Misskey Bot WS 任务 {self.user_id}")
 
+    def check_push(self, note: Note):
+        if note.user_id != self.instance_user_id:
+            return False
+        if self.tg_user.push_chat_id == 0:
+            return False
+        if note.visibility in ["specified"]:
+            return False
+        if note.tags.index("nofwd") != -1:
+            return False
+        return True
+
     async def on_note(self, note: Note):
         logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
         async with self.lock:
@@ -66,7 +77,7 @@ class MisskeyBot(commands.Bot):
                     True,
                 )
                 await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
-            if note.user_id == self.instance_user_id and self.tg_user.push_chat_id != 0:
+            if self.check_push(note):
                 msgs = await send_update(
                     self.tg_user.host, self.tg_user.push_chat_id, note, None, False
                 )
