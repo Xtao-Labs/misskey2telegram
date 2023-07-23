@@ -61,7 +61,7 @@ class MisskeyBot(commands.Bot):
             return False
         if note.visibility in ["specified"]:
             return False
-        if note.tags.index("nofwd") != -1:
+        if "nofwd" in note.tags:
             return False
         return True
 
