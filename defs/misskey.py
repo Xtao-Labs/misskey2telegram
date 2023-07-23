@@ -98,12 +98,12 @@ def get_content(host: str, note: Note) -> str:
         show_note = note.reply
         action = "回复"
         if note.reply.content:
-            content = f"> {note.reply.content}\n\n{content}"
+            content = f"> {note.reply.content}\n\n=====================\n\n{content}"
         origin = (
             f"\n{get_user_alink(host, note.reply.author)} "
             f"发表于 {get_post_time(note.reply.created_at)}"
         )
-    content = format_at(host, content[:768])
+    content = format_at(host, content[:768] + " ").strip()
     return f"""<b>Misskey Timeline Update</b>
 
 {content}
