@@ -49,12 +49,11 @@ class UserAction:
             return None
 
     @staticmethod
-    async def get_all_token_ok_users() -> list[User]:
+    async def get_all_have_token_users() -> list[User]:
         async with sqlite.session() as session:
             session = cast(AsyncSession, session)
             statement = (
                 select(User)
-                .where(User.status == TokenStatusEnum.STATUS_SUCCESS)
                 .where(User.token != "")
                 .where(User.host != "")
             )

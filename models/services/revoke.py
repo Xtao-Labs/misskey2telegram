@@ -41,7 +41,7 @@ class RevokeAction:
         keys = []
         async for key in cache.scan(f"sub:{uid}:*"):
             key: str
-            keys.append(key[4:])
+            keys.append(key.split(":")[-1])
         return keys
 
     @staticmethod

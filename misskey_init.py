@@ -189,7 +189,7 @@ async def rerun_misskey_bot(user_id: int) -> bool:
 async def init_misskey_bot():
     await sqlite.create_db_and_tables()
     count = 0
-    for user in await UserAction.get_all_token_ok_users():
+    for user in await UserAction.get_all_have_token_users():
         mid = await test_token(user.host, user.token)
         if not mid:
             logs.warning(f"{user.user_id} Token 失效")
