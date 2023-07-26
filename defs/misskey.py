@@ -89,7 +89,11 @@ def get_content(host: str, note: Note) -> str:
     if note.renote:
         show_note = note.renote
         action = "转推"
-        content = note.renote.content or content
+        if content:
+            action = "引用"
+            content = f"> {note.renote.content or ''}\n\n=====================\n\n{content}"
+        else:
+            content = note.renote.content or ""
         origin = (
             f"\n{get_user_alink(host, note.renote.author)} "
             f"发表于 {get_post_time(note.renote.created_at)}"
