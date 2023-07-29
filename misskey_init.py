@@ -26,6 +26,7 @@ from defs.notice import (
 )
 
 from models.models.user import User, TokenStatusEnum
+from models.services.no_repeat_renote import NoRepeatRenoteAction
 from models.services.revoke import RevokeAction
 from models.services.user import UserAction
 
@@ -68,20 +69,22 @@ class MisskeyBot(commands.Bot):
     async def on_note(self, note: Note):
         logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
         async with self.lock:
-            if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
-                msgs = await send_update(
-                    self.tg_user.host,
-                    self.tg_user.chat_id,
-                    note,
-                    self.tg_user.timeline_topic,
-                    True,
-                )
-                await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
-            if self.check_push(note):
-                msgs = await send_update(
-                    self.tg_user.host, self.tg_user.push_chat_id, note, None, False
-                )
-                await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+            if await NoRepeatRenoteAction.check(self.tg_user.user_id, note):
+                if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
+                    msgs = await send_update(
+                        self.tg_user.host,
+                        self.tg_user.chat_id,
+                        note,
+                        self.tg_user.timeline_topic,
+                        True,
+                    )
+                    await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+                if self.check_push(note):
+                    msgs = await send_update(
+                        self.tg_user.host, self.tg_user.push_chat_id, note, None, False
+                    )
+                    await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+            await NoRepeatRenoteAction.set(self.tg_user.user_id, note)
         logs.info(f"{self.tg_user.user_id} 处理 note {note.id} 完成")
 
     async def on_note_deleted(self, note: NoteDeleted):
