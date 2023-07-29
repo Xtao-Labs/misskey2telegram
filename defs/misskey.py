@@ -91,7 +91,9 @@ def get_content(host: str, note: Note) -> str:
         action = "转推"
         if content:
             action = "引用"
-            content = f"> {note.renote.content or ''}\n\n=====================\n\n{content}"
+            content = (
+                f"> {note.renote.content or ''}\n\n=====================\n\n{content}"
+            )
         else:
             content = note.renote.content or ""
         origin = (
@@ -389,6 +391,8 @@ async def send_update(
             elif file_type.startswith("audio"):
                 return [await send_audio(host, cid, url, note, topic_id, show_second)]
             else:
-                return [await send_document(host, cid, url, note, topic_id, show_second)]
+                return [
+                    await send_document(host, cid, url, note, topic_id, show_second)
+                ]
         case _:
             return await send_group(host, cid, files, note, topic_id, show_second)

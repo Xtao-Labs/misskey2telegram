@@ -9,3 +9,4 @@ PyYAML==6.0.1
 aiofiles==23.1.0
 pillow==10.0.0
 cashews==6.2.0
+alembic==1.11.1

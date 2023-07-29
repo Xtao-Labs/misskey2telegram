@@ -52,11 +52,7 @@ class UserAction:
     async def get_all_have_token_users() -> list[User]:
         async with sqlite.session() as session:
             session = cast(AsyncSession, session)
-            statement = (
-                select(User)
-                .where(User.token != "")
-                .where(User.host != "")
-            )
+            statement = select(User).where(User.token != "").where(User.host != "")
             results = await session.exec(statement)
             return [
                 user[0]
