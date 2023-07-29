@@ -84,6 +84,8 @@ class MisskeyBot(commands.Bot):
                         self.tg_user.host, self.tg_user.push_chat_id, note, None, False
                     )
                     await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+            else:
+                logs.info(f"{self.tg_user.user_id} 跳过重复转发 note {note.id}")
             await NoRepeatRenoteAction.set(self.tg_user.user_id, note)
         logs.info(f"{self.tg_user.user_id} 处理 note {note.id} 完成")
 
