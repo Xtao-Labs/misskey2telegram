@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 from asyncio import sleep, Lock
-from builtins import function
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Union
 
@@ -110,7 +109,7 @@ class MisskeyBot(commands.Bot):
             await RevokeAction.process_delete_note(self.tg_user.user_id, note.note_id)
         logs.info(f"{self.tg_user.user_id} 处理 note 删除 {note.note_id} 完成")
 
-    async def send_fcm(self, func: function, notice):
+    async def send_fcm(self, func, notice):
         logs.info(f"{self.tg_user.user_id} 发送 FCM 通知 {func.__name__}")
         loop = asyncio.get_event_loop()
         try:
