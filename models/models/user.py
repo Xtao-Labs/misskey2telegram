@@ -20,3 +20,4 @@ class User(SQLModel, table=True):
     notice_topic: int = Field(default=0)
     instance_user_id: str = Field(default="")
     push_chat_id: int = Field(default=0, sa_column=Column(sa.BigInteger))
+    fcm_token: str = Field(sa_column=Column(sa.String, nullable=True, default=""))
