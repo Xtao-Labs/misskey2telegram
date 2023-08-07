@@ -22,7 +22,8 @@ class RevokeAction:
         return int(cid), [int(mid) for mid in ids.split(",")]
 
     @staticmethod
-    async def push(uid: int, note_id: str, messages: list[Message]):
+    async def push(uid: int, note_id: str, messages: Message | list[Message]):
+        messages = [messages] if isinstance(messages, Message) else messages
         await cache.set(
             f"sub:{uid}:{note_id}",
             RevokeAction.encode_messages(messages),

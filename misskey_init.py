@@ -4,6 +4,7 @@ from asyncio import sleep, Lock
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Union
 
+import sentry_sdk
 from aiohttp import ClientConnectorError
 from firebase_admin.exceptions import InvalidArgumentError
 from mipa.exception import WebSocketNotConnected
@@ -51,6 +52,7 @@ from init import bot, logs, sqlite
 class MisskeyBot(commands.Bot):
     def __init__(self, user: User):
         super().__init__()
+        self._BotBase__on_error = self.__on_error
         self.user_id: int = user.user_id
         self.instance_user_id: str = user.instance_user_id
         self.tg_user: User = user
@@ -133,7 +135,7 @@ class MisskeyBot(commands.Bot):
                     executor, func, self.tg_user.fcm_token, notice
                 )
         except InvalidArgumentError:
-            logs.error(f"{self.tg_user.user_id} 无效的 FCM Token")
+            logs.warning(f"{self.tg_user.user_id} 无效的 FCM Token")
         except Exception as e:
             logs.error(e)
 
@@ -188,6 +190,11 @@ class MisskeyBot(commands.Bot):
     async def on_quote(self, notice: NotificationNote):
         if self.tg_user.fcm_token:
             await self.send_fcm(send_fcm_quote, notice)
+
+    @staticmethod
+    async def __on_error(event_method: str) -> None:
+        logs.exception(f"MisskeyBot 执行 {event_method} 出错", exc_info=True)
+        sentry_sdk.capture_exception()
 
 
 misskey_bot_map: dict[int, MisskeyBot] = {}
