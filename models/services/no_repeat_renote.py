@@ -16,6 +16,8 @@ class NoRepeatRenoteAction:
 
     @staticmethod
     async def check(uid: int, note: Note):
+        if await NoRepeatRenoteAction.get(uid, note.id):
+            return False
         if note.renote and (not note.content):
             if await NoRepeatRenoteAction.get(uid, note.renote.id):
                 return False
