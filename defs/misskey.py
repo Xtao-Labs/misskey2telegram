@@ -313,14 +313,14 @@ async def get_media_group(files: list[File]) -> list:
 
 
 @retry
-async def send_media_group(cid: int, groups: list):
-    return await bot.send_media_group(cid, groups)
+async def send_media_group(cid: int, groups: list, reply_to_message_id: int):
+    return await bot.send_media_group(cid, groups, reply_to_message_id=reply_to_message_id)
 
 
-async def send_group_msg(cid: int, groups: list):
+async def send_group_msg(cid: int, groups: list, reply_to_message_id: int):
     msgs = []
     for i in range(0, len(groups), 10):
-        msg = await send_media_group(cid, groups[i : i + 10])
+        msg = await send_media_group(cid, groups[i : i + 10], reply_to_message_id)
         msgs.extend(msg)
     return msgs
 
@@ -348,7 +348,7 @@ async def send_group(
         elif isinstance(i, InputMediaDocument):
             document.append(i)
     for i in (photo, video, audio, document):
-        msg_ids.extend(await send_group_msg(cid, i))
+        msg_ids.extend(await send_group_msg(cid, i, reply_to_message_id))
     tmsg = await send_text(
         host, cid, note, msg_ids[0].id if msg_ids else None, show_second
     )
