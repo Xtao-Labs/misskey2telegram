@@ -156,7 +156,7 @@ def deprecated_to_text(func):
     return wrapper
 
 
-async def fetch_document(file: File) -> Optional[str]:
+async def fetch_document(host: str, file: File) -> Optional[str]:
     file_name = "downloads/" + file.name
     file_url = file.url
     if file.size > 10 * 1024 * 1024:
@@ -165,7 +165,20 @@ async def fetch_document(file: File) -> Optional[str]:
         return file_url
     logs.info(f"下载远程文件：{file_url}")
     async with AsyncClient(timeout=60.0, headers=headers) as request:
-        req = await request.get(file_url)
+
+        async def raw():
+            return await request.get(file_url)
+
+        async def proxy():
+            _file_url = f"https://{host}/proxy/static.webp"
+            params = {
+                "url": file_url,
+            }
+            return await request.get(f"https://{host}/proxy/static.webp", params=params)
+
+        req = await raw()
+        if req and req.status_code != 200:
+            req = await proxy()
     if req.status_code != 200:
         return file_url
     if file_name.lower().endswith(".webp"):
@@ -274,10 +287,10 @@ async def send_document(
     return msg
 
 
-async def get_media_group(files: list[File]) -> list:
+async def get_media_group(host: str, files: list[File]) -> list:
     media_lists = []
     for file_ in files:
-        file_url = await fetch_document(file_)
+        file_url = await fetch_document(host, file_)
         if not file_url:
             continue
         file_type = file_.type
@@ -302,10 +315,10 @@ async def get_media_group(files: list[File]) -> list:
                     parse_mode=ParseMode.HTML,
                 )
             )
-        elif file := await fetch_document(file_):
+        else:
             media_lists.append(
                 InputMediaDocument(
-                    file,
+                    file_url,
                     parse_mode=ParseMode.HTML,
                 )
             )
@@ -336,7 +349,7 @@ async def send_group(
     reply_to_message_id: int,
     show_second: bool,
 ) -> List[Message]:
-    groups = await get_media_group(files)
+    groups = await get_media_group(host, files)
     if len(groups) == 0:
         return [await send_text(host, cid, note, reply_to_message_id, show_second)]
     photo, video, audio, document, msg_ids = [], [], [], [], []
@@ -373,7 +386,7 @@ async def send_update(
         case 1:
             file = files[0]
             file_type = file.type
-            url = await fetch_document(file)
+            url = await fetch_document(host, file)
             if file_type.startswith("image"):
                 return await send_photo(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("video"):
