@@ -20,7 +20,7 @@ from pyrogram.types import (
     Message,
 )
 
-from defs.image import webp_to_png
+from defs.image import webp_to_jpg
 from init import bot, logs, headers
 from models.services.scheduler import add_delete_file_job, delete_file
 
@@ -170,7 +170,7 @@ async def fetch_document(file: File) -> Optional[str]:
         return file_url
     if file_name.lower().endswith(".webp"):
         file_name = file_name[:-5] + ".jpg"
-        io = webp_to_png(req.content).getvalue()
+        io = webp_to_jpg(req.content).getvalue()
     else:
         io = req.content
     async with aiofiles.open(file_name, "wb") as f:
