@@ -1,13 +1,15 @@
 import contextlib
 import re
+from asyncio import sleep
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
 import aiofiles as aiofiles
+from httpx import AsyncClient
 from mipac import Note, File
 from mipac.models.lite import LiteUser
 from pyrogram.enums import ParseMode
-from pyrogram.errors import MediaEmpty
+from pyrogram.errors import MediaEmpty, FloodWait
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -19,7 +21,7 @@ from pyrogram.types import (
 )
 
 from defs.image import webp_to_png
-from init import bot, request
+from init import bot, logs, headers
 from models.services.scheduler import add_delete_file_job, delete_file
 
 at_parse = re.compile(r"(?<!\S)@(\S+)\s")
@@ -118,6 +120,18 @@ def get_content(host: str, note: Note) -> str:
 点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
+def retry(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except FloodWait as e:
+            await sleep(e.value + 1)
+            return await func(*args, **kwargs)
+
+    return wrapper
+
+
+@retry
 async def send_text(
     host: str, cid: int, note: Note, reply_to_message_id: int, show_second: bool
 ) -> Message:
@@ -149,7 +163,9 @@ async def fetch_document(file: File) -> Optional[str]:
         return file_url
     if not file_url:
         return file_url
-    req = await request.get(file_url)
+    logs.info(f"下载远程文件：{file_url}")
+    async with AsyncClient(timeout=60.0, headers=headers) as request:
+        req = await request.get(file_url)
     if req.status_code != 200:
         return file_url
     if file_name.lower().endswith(".webp"):
@@ -163,6 +179,7 @@ async def fetch_document(file: File) -> Optional[str]:
     return file_name
 
 
+@retry
 @deprecated_to_text
 async def send_photo(
     host: str,
@@ -185,6 +202,7 @@ async def send_photo(
     )
 
 
+@retry
 @deprecated_to_text
 async def send_video(
     host: str,
@@ -207,6 +225,7 @@ async def send_video(
     )
 
 
+@retry
 @deprecated_to_text
 async def send_audio(
     host: str,
@@ -229,6 +248,7 @@ async def send_audio(
     )
 
 
+@retry
 @deprecated_to_text
 async def send_document(
     host: str,
@@ -257,7 +277,7 @@ async def send_document(
 async def get_media_group(files: list[File]) -> list:
     media_lists = []
     for file_ in files:
-        file_url = file_.url
+        file_url = await fetch_document(file_)
         if not file_url:
             continue
         file_type = file_.type
@@ -292,6 +312,20 @@ async def get_media_group(files: list[File]) -> list:
     return media_lists
 
 
+@retry
+async def send_media_group(cid: int, groups: list):
+    return await bot.send_media_group(cid, groups)
+
+
+async def send_group_msg(cid: int, groups: list):
+    msgs = []
+    for i in range(0, len(groups), 10):
+        msg = await send_media_group(cid, groups[i : i + 10])
+        msgs.extend(msg)
+    return msgs
+
+
+@deprecated_to_text
 async def send_group(
     host: str,
     cid: int,
@@ -303,7 +337,7 @@ async def send_group(
     groups = await get_media_group(files)
     if len(groups) == 0:
         return [await send_text(host, cid, note, reply_to_message_id, show_second)]
-    photo, video, audio, document, msg = [], [], [], [], None
+    photo, video, audio, document, msg_ids = [], [], [], [], []
     for i in groups:
         if isinstance(i, InputMediaPhoto):
             photo.append(i)
@@ -313,54 +347,8 @@ async def send_group(
             audio.append(i)
         elif isinstance(i, InputMediaDocument):
             document.append(i)
-    if video and (audio or document):
-        msg = await bot.send_media_group(
-            cid,
-            video,
-            reply_to_message_id=reply_to_message_id,
-        )
-        if audio:
-            msg = await bot.send_media_group(
-                cid,
-                audio,
-                reply_to_message_id=reply_to_message_id,
-            )
-        elif document:
-            msg = await bot.send_media_group(
-                cid,
-                document,
-                reply_to_message_id=reply_to_message_id,
-            )
-    elif audio and (photo or document):
-        msg = await bot.send_media_group(
-            cid,
-            audio,
-            reply_to_message_id=reply_to_message_id,
-        )
-        if photo:
-            msg = await bot.send_media_group(
-                cid,
-                photo,
-                reply_to_message_id=reply_to_message_id,
-            )
-        elif document:
-            msg = await bot.send_media_group(
-                cid,
-                document,
-                reply_to_message_id=reply_to_message_id,
-            )
-    else:
-        msg = await bot.send_media_group(
-            cid,
-            groups,
-            reply_to_message_id=reply_to_message_id,
-        )
-    if msg and isinstance(msg, list):
-        msg_ids = msg
-    elif msg:
-        msg_ids = [msg]
-    else:
-        msg_ids = []
+    for i in (photo, video, audio, document):
+        msg_ids.extend(await send_group_msg(cid, i))
     tmsg = await send_text(
         host, cid, note, msg_ids[0].id if msg_ids else None, show_second
     )
