@@ -17,6 +17,7 @@ from mipac import (
     NoteDeleted,
     NotificationReaction,
     NotificationNote,
+    Route,
 )
 from mipac.client import Client as MisskeyClient
 
@@ -55,11 +56,22 @@ class MisskeyBot(commands.Bot):
         self.tg_user: User = user
         self.lock = Lock()
 
+    async def fetch_offline_notes(self):
+        logs.info(f"{self.tg_user.user_id} 开始获取最近十条时间线")
+        data = {"withReplies": False, "limit": 10}
+        data = await self.core.http.request(
+            Route("POST", "/api/notes/timeline"), auth=True, json=data
+        )
+        for note in (Note(note=note, client=self.client) for note in data):
+            await self.process_note(note, notice=False)
+        logs.info(f"{self.tg_user.user_id} 处理完成最近十条时间线")
+
     async def when_start(self, ws):
         await Router(ws).connect_channel(["main", "home"])
         subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
         for sub in subs:
             await Router(ws).capture_message(sub)
+        await self.fetch_offline_notes()
 
     async def on_ready(self, ws):
         await self.when_start(ws)
@@ -80,8 +92,7 @@ class MisskeyBot(commands.Bot):
             return False
         return True
 
-    async def on_note(self, note: Note):
-        logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
+    async def process_note(self, note: Note, notice: bool = True):
         async with self.lock:
             if await NoRepeatRenoteAction.check(self.tg_user.user_id, note):
                 if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
@@ -98,9 +109,13 @@ class MisskeyBot(commands.Bot):
                         self.tg_user.host, self.tg_user.push_chat_id, note, None, False
                     )
                     await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
-            else:
+            elif notice:
                 logs.info(f"{self.tg_user.user_id} 跳过重复转发 note {note.id}")
             await NoRepeatRenoteAction.set(self.tg_user.user_id, note)
+
+    async def on_note(self, note: Note):
+        logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
+        await self.process_note(note)
         logs.info(f"{self.tg_user.user_id} 处理 note {note.id} 完成")
 
     async def on_note_deleted(self, note: NoteDeleted):

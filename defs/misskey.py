@@ -314,7 +314,9 @@ async def get_media_group(files: list[File]) -> list:
 
 @retry
 async def send_media_group(cid: int, groups: list, reply_to_message_id: int):
-    return await bot.send_media_group(cid, groups, reply_to_message_id=reply_to_message_id)
+    return await bot.send_media_group(
+        cid, groups, reply_to_message_id=reply_to_message_id
+    )
 
 
 async def send_group_msg(cid: int, groups: list, reply_to_message_id: int):
