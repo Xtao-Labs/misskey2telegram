@@ -4,7 +4,6 @@ from asyncio import sleep, Lock
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Union
 
-import sentry_sdk
 from aiohttp import ClientConnectorError
 from firebase_admin.exceptions import InvalidArgumentError
 from mipa.exception import WebSocketNotConnected
@@ -194,7 +193,6 @@ class MisskeyBot(commands.Bot):
     @staticmethod
     async def __on_error(event_method: str) -> None:
         logs.exception(f"MisskeyBot 执行 {event_method} 出错", exc_info=True)
-        sentry_sdk.capture_exception()
 
 
 misskey_bot_map: dict[int, MisskeyBot] = {}
