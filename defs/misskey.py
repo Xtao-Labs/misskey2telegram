@@ -18,6 +18,7 @@ from pyrogram.types import (
     InputMediaDocument,
     InputMediaAudio,
     Message,
+    InputMediaAnimation,
 )
 
 from defs.image import webp_to_jpg
@@ -217,6 +218,29 @@ async def send_photo(
 
 @retry
 @deprecated_to_text
+async def send_gif(
+    host: str,
+    cid: int,
+    url: str,
+    note: Note,
+    reply_to_message_id: int,
+    show_second: bool,
+) -> Message:
+    if not url:
+        return await send_text(host, cid, note, reply_to_message_id, show_second)
+    return await bot.send_animation(
+        cid,
+        url,
+        reply_to_message_id=reply_to_message_id,
+        caption=get_content(host, note),
+        reply_markup=gen_button(
+            host, note, get_user_link(host, note.author), show_second
+        ),
+    )
+
+
+@retry
+@deprecated_to_text
 async def send_video(
     host: str,
     cid: int,
@@ -295,12 +319,20 @@ async def get_media_group(host: str, files: list[File]) -> list:
             continue
         file_type = file_.type
         if file_type.startswith("image"):
-            media_lists.append(
-                InputMediaPhoto(
-                    file_url,
-                    parse_mode=ParseMode.HTML,
+            if "gif" in file_type:
+                media_lists.append(
+                    InputMediaAnimation(
+                        file_url,
+                        parse_mode=ParseMode.HTML,
+                    )
                 )
-            )
+            else:
+                media_lists.append(
+                    InputMediaPhoto(
+                        file_url,
+                        parse_mode=ParseMode.HTML,
+                    )
+                )
         elif file_type.startswith("video"):
             media_lists.append(
                 InputMediaVideo(
@@ -356,7 +388,7 @@ async def send_group(
     for i in groups:
         if isinstance(i, InputMediaPhoto):
             photo.append(i)
-        elif isinstance(i, InputMediaVideo):
+        elif isinstance(i, InputMediaVideo) or isinstance(i, InputMediaAnimation):
             video.append(i)
         elif isinstance(i, InputMediaAudio):
             audio.append(i)
@@ -388,6 +420,8 @@ async def send_update(
             file_type = file.type
             url = await fetch_document(host, file)
             if file_type.startswith("image"):
+                if "gif" in file_type:
+                    return await send_gif(host, cid, url, note, topic_id, show_second)
                 return await send_photo(host, cid, url, note, topic_id, show_second)
             elif file_type.startswith("video"):
                 return await send_video(host, cid, url, note, topic_id, show_second)

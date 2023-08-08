@@ -75,12 +75,18 @@ class MisskeyBot(commands.Bot):
             await Router(ws).capture_message(sub)
 
     async def on_ready(self, ws):
-        await self.when_start(ws)
-        logs.info(f"成功启动 Misskey Bot WS 任务 {self.user_id}")
+        try:
+            await self.when_start(ws)
+            logs.info(f"成功启动 Misskey Bot WS 任务 {self.user_id}")
+        except ConnectionResetError:
+            """在预启动时，WS 已被关闭"""
 
     async def on_reconnect(self, ws):
-        await self.when_start(ws)
-        logs.info(f"成功重连 Misskey Bot WS 任务 {self.user_id}")
+        try:
+            await self.when_start(ws)
+            logs.info(f"成功重连 Misskey Bot WS 任务 {self.user_id}")
+        except ConnectionResetError:
+            """在预启动时，WS 已被关闭"""
 
     def check_push(self, note: Note):
         if note.user_id != self.instance_user_id:
@@ -95,24 +101,33 @@ class MisskeyBot(commands.Bot):
 
     async def process_note(self, note: Note, notice: bool = True):
         async with self.lock:
-            if await NoRepeatRenoteAction.check(self.tg_user.user_id, note):
-                if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
-                    msgs = await send_update(
-                        self.tg_user.host,
-                        self.tg_user.chat_id,
-                        note,
-                        self.tg_user.timeline_topic,
-                        True,
-                    )
-                    await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
-                if self.check_push(note):
-                    msgs = await send_update(
-                        self.tg_user.host, self.tg_user.push_chat_id, note, None, False
-                    )
-                    await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
-            elif notice:
-                logs.info(f"{self.tg_user.user_id} 跳过重复转发 note {note.id}")
-            await NoRepeatRenoteAction.set(self.tg_user.user_id, note)
+            try:
+                if await NoRepeatRenoteAction.check(self.tg_user.user_id, note):
+                    if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
+                        msgs = await send_update(
+                            self.tg_user.host,
+                            self.tg_user.chat_id,
+                            note,
+                            self.tg_user.timeline_topic,
+                            True,
+                        )
+                        await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+                    if self.check_push(note):
+                        msgs = await send_update(
+                            self.tg_user.host,
+                            self.tg_user.push_chat_id,
+                            note,
+                            None,
+                            False,
+                        )
+                        await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
+                elif notice:
+                    logs.info(f"{self.tg_user.user_id} 跳过重复转发 note {note.id}")
+                await NoRepeatRenoteAction.set(self.tg_user.user_id, note)
+            except Exception:
+                logs.exception(
+                    f"{self.tg_user.user_id} 处理 note {self.tg_user.host}/notes/{note.id} 发生异常"
+                )
 
     async def on_note(self, note: Note):
         logs.info(f"{self.tg_user.user_id} 收到新 note {note.id}")
