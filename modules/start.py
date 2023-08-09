@@ -19,6 +19,8 @@ des = f"""欢迎使用 {bot.me.first_name}，这是一个用于在 Telegram 上�
 
 5. [可选] 在私聊中使用 `/bind_push [对话id]` 绑定本人发帖时推送 /unbind_push 解除绑定
 
+6. [可选] 在私聊中使用 `/config` 设置敏感媒体是否自动设置 Spoiler
+
 至此，你便可以在 Telegram 接收 Misskey 消息，同时你可以私聊我使用 /status 查看 Bot 运行状态
 
 此 Bot 仅支持 Misskey V13 实例的账号！"""

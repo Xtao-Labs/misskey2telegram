@@ -41,23 +41,27 @@ from defs.notice import (
 )
 
 from models.models.user import User, TokenStatusEnum
+from models.models.user_config import UserConfig
 from models.services.no_repeat_renote import NoRepeatRenoteAction
 from models.services.revoke import RevokeAction
 from models.services.user import UserAction
 
 from init import bot, logs, sqlite
+from models.services.user_config import UserConfigAction
 
 
 class MisskeyBot(commands.Bot):
-    def __init__(self, user: User):
+    def __init__(self, user: User, user_config: UserConfig):
         super().__init__()
         self._BotBase__on_error = self.__on_error
         self.user_id: int = user.user_id
         self.instance_user_id: str = user.instance_user_id
         self.tg_user: User = user
+        self.user_config: UserConfig = user_config
         self.lock = Lock()
 
     async def fetch_offline_notes(self):
+        return
         logs.info(f"{self.tg_user.user_id} 开始获取最近十条时间线")
         data = {"withReplies": False, "limit": 10}
         data = await self.core.http.request(
@@ -110,6 +114,8 @@ class MisskeyBot(commands.Bot):
                             note,
                             self.tg_user.timeline_topic,
                             True,
+                            spoiler=self.user_config
+                            and self.user_config.timeline_spoiler,
                         )
                         await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
                     if self.check_push(note):
@@ -119,6 +125,7 @@ class MisskeyBot(commands.Bot):
                             note,
                             None,
                             False,
+                            spoiler=self.user_config and self.user_config.push_spoiler,
                         )
                         await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
                 elif notice:
@@ -217,14 +224,15 @@ def get_misskey_bot(user_id: int) -> Optional[MisskeyBot]:
     return None if user_id not in misskey_bot_map else misskey_bot_map[user_id]
 
 
-async def create_or_get_misskey_bot(user: User) -> MisskeyBot:
+async def create_or_get_misskey_bot(user: User, user_config: UserConfig) -> MisskeyBot:
     if user.user_id not in misskey_bot_map:
-        misskey_bot_map[user.user_id] = MisskeyBot(user)
+        misskey_bot_map[user.user_id] = MisskeyBot(user, user_config)
     return misskey_bot_map[user.user_id]
 
 
 async def run(user: User):
-    misskey = await create_or_get_misskey_bot(user)
+    user_config = await UserConfigAction.get_user_config_by_id(user.user_id)
+    misskey = await create_or_get_misskey_bot(user, user_config)
     try:
         logs.info(f"尝试启动 Misskey Bot WS 任务 {user.user_id}")
         await misskey.start(f"wss://{user.host}/streaming", user.token, log_level=None)

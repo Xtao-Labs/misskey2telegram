@@ -202,6 +202,7 @@ async def send_photo(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
+    spoiler: bool,
 ) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
@@ -213,6 +214,7 @@ async def send_photo(
         reply_markup=gen_button(
             host, note, get_user_link(host, note.author), show_second
         ),
+        has_spoiler=spoiler,
     )
 
 
@@ -225,6 +227,7 @@ async def send_gif(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
+    spoiler: bool,
 ) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
@@ -236,6 +239,7 @@ async def send_gif(
         reply_markup=gen_button(
             host, note, get_user_link(host, note.author), show_second
         ),
+        has_spoiler=spoiler,
     )
 
 
@@ -248,6 +252,7 @@ async def send_video(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
+    spoiler: bool,
 ) -> Message:
     if not url:
         return await send_text(host, cid, note, reply_to_message_id, show_second)
@@ -259,6 +264,7 @@ async def send_video(
         reply_markup=gen_button(
             host, note, get_user_link(host, note.author), show_second
         ),
+        has_spoiler=spoiler,
     )
 
 
@@ -311,7 +317,7 @@ async def send_document(
     return msg
 
 
-async def get_media_group(host: str, files: list[File]) -> list:
+async def get_media_group(host: str, files: list[File], spoiler: bool) -> list:
     media_lists = []
     for file_ in files:
         file_url = await fetch_document(host, file_)
@@ -324,6 +330,7 @@ async def get_media_group(host: str, files: list[File]) -> list:
                     InputMediaAnimation(
                         file_url,
                         parse_mode=ParseMode.HTML,
+                        has_spoiler=file_.is_sensitive and spoiler,
                     )
                 )
             else:
@@ -331,6 +338,7 @@ async def get_media_group(host: str, files: list[File]) -> list:
                     InputMediaPhoto(
                         file_url,
                         parse_mode=ParseMode.HTML,
+                        has_spoiler=file_.is_sensitive and spoiler,
                     )
                 )
         elif file_type.startswith("video"):
@@ -338,6 +346,7 @@ async def get_media_group(host: str, files: list[File]) -> list:
                 InputMediaVideo(
                     file_url,
                     parse_mode=ParseMode.HTML,
+                    has_spoiler=file_.is_sensitive and spoiler,
                 )
             )
         elif file_type.startswith("audio"):
@@ -380,8 +389,9 @@ async def send_group(
     note: Note,
     reply_to_message_id: int,
     show_second: bool,
+    spoiler: bool,
 ) -> List[Message]:
-    groups = await get_media_group(host, files)
+    groups = await get_media_group(host, files, spoiler)
     if len(groups) == 0:
         return [await send_text(host, cid, note, reply_to_message_id, show_second)]
     photo, video, audio, document, msg_ids = [], [], [], [], []
@@ -405,7 +415,12 @@ async def send_group(
 
 
 async def send_update(
-    host: str, cid: int, note: Note, topic_id: Optional[int], show_second: bool
+    host: str,
+    cid: int,
+    note: Note,
+    topic_id: Optional[int],
+    show_second: bool,
+    spoiler: bool,
 ) -> Message | list[Message]:
     files = list(note.files)
     if note.reply:
@@ -421,13 +436,21 @@ async def send_update(
             url = await fetch_document(host, file)
             if file_type.startswith("image"):
                 if "gif" in file_type:
-                    return await send_gif(host, cid, url, note, topic_id, show_second)
-                return await send_photo(host, cid, url, note, topic_id, show_second)
+                    return await send_gif(
+                        host, cid, url, note, topic_id, show_second, spoiler
+                    )
+                return await send_photo(
+                    host, cid, url, note, topic_id, show_second, spoiler
+                )
             elif file_type.startswith("video"):
-                return await send_video(host, cid, url, note, topic_id, show_second)
+                return await send_video(
+                    host, cid, url, note, topic_id, show_second, spoiler
+                )
             elif file_type.startswith("audio"):
                 return await send_audio(host, cid, url, note, topic_id, show_second)
             else:
                 return await send_document(host, cid, url, note, topic_id, show_second)
         case _:
-            return await send_group(host, cid, files, note, topic_id, show_second)
+            return await send_group(
+                host, cid, files, note, topic_id, show_second, spoiler
+            )
