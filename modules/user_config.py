@@ -13,6 +13,7 @@ from pyrogram.types import (
 
 from defs.web_app import WebAppData, WebAppUserConfig, filter_web_data
 from glover import web_domain
+from init import logs
 from misskey_init import rerun_misskey_bot
 from models.services.user_config import UserConfigAction
 
@@ -35,6 +36,7 @@ async def process_user_config(_, message: Message):
         user_config.timeline_spoiler = data.timeline_spoiler
         user_config.push_spoiler = data.push_spoiler
         await UserConfigAction.add_user_config(user_config)
+    logs.info(f"{message.from_user.id} 更新设置成功")
     await message.reply("更新设置成功。", quote=True, reply_markup=ReplyKeyboardRemove())
     await rerun_misskey_bot(message.from_user.id)
 
@@ -61,3 +63,4 @@ async def notice_user_config(_, message: Message):
             [[KeyboardButton(text="web config", web_app=WebAppInfo(url=url))]]
         ),
     )
+    logs.info(f"{message.from_user.id} 请求更改设置")

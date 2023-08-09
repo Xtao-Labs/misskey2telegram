@@ -437,14 +437,32 @@ async def send_update(
             if file_type.startswith("image"):
                 if "gif" in file_type:
                     return await send_gif(
-                        host, cid, url, note, topic_id, show_second, spoiler
+                        host,
+                        cid,
+                        url,
+                        note,
+                        topic_id,
+                        show_second,
+                        file.is_sensitive and spoiler,
                     )
                 return await send_photo(
-                    host, cid, url, note, topic_id, show_second, spoiler
+                    host,
+                    cid,
+                    url,
+                    note,
+                    topic_id,
+                    show_second,
+                    file.is_sensitive and spoiler,
                 )
             elif file_type.startswith("video"):
                 return await send_video(
-                    host, cid, url, note, topic_id, show_second, spoiler
+                    host,
+                    cid,
+                    url,
+                    note,
+                    topic_id,
+                    show_second,
+                    file.is_sensitive and spoiler,
                 )
             elif file_type.startswith("audio"):
                 return await send_audio(host, cid, url, note, topic_id, show_second)
