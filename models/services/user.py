@@ -158,14 +158,3 @@ class UserAction:
         user.push_chat_id = push_chat_id
         await UserAction.update_user(user)
         return True
-
-    @staticmethod
-    async def change_user_fcm_token(user_id: int, fcm_token: str) -> bool:
-        user = await UserAction.get_user_by_id(user_id)
-        if not user:
-            return False
-        if user.fcm_token == fcm_token:
-            return False
-        user.fcm_token = fcm_token
-        await UserAction.update_user(user)
-        return True
