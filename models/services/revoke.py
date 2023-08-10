@@ -23,6 +23,8 @@ class RevokeAction:
 
     @staticmethod
     async def push(uid: int, note_id: str, messages: Message | list[Message]):
+        if not messages:
+            return
         messages = [messages] if isinstance(messages, Message) else messages
         await cache.set(
             f"sub:{uid}:{note_id}",

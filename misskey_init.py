@@ -20,6 +20,8 @@ from mipac import (
     Route,
 )
 from mipac.client import Client as MisskeyClient
+from pyrogram.errors import ChatWriteForbidden
+from pyrogram.types import Message
 
 from defs.fcm_notice import (
     send_fcm_user_followed,
@@ -32,7 +34,7 @@ from defs.fcm_notice import (
     send_fcm_renote,
     send_fcm_quote,
 )
-from defs.misskey import send_update
+from defs.misskey import send_update, send_notice
 from defs.notice import (
     send_user_followed,
     send_follow_request,
@@ -61,7 +63,6 @@ class MisskeyBot(commands.Bot):
         self.lock = Lock()
 
     async def fetch_offline_notes(self):
-        return
         logs.info(f"{self.tg_user.user_id} 开始获取最近十条时间线")
         data = {"withReplies": False, "limit": 10}
         data = await self.core.http.request(
@@ -103,30 +104,49 @@ class MisskeyBot(commands.Bot):
             return False
         return True
 
+    async def send_update(self, note: Note, send_type: str) -> Message | list[Message]:
+        cid = (
+            self.tg_user.chat_id
+            if send_type == "timeline"
+            else self.tg_user.push_chat_id
+        )
+        try:
+            if send_type == "timeline":
+                return await send_update(
+                    self.tg_user.host,
+                    self.tg_user.chat_id,
+                    note,
+                    self.tg_user.timeline_topic,
+                    True,
+                    spoiler=self.user_config and self.user_config.timeline_spoiler,
+                )
+            else:
+                return await send_update(
+                    self.tg_user.host,
+                    self.tg_user.push_chat_id,
+                    note,
+                    None,
+                    False,
+                    spoiler=self.user_config and self.user_config.push_spoiler,
+                )
+        except ChatWriteForbidden:
+            logs.warning(f"{self.tg_user.user_id} 无法向 {send_type} {cid} 发送消息")
+            if send_type == "timeline":
+                await UserAction.change_user_group_id(self.tg_user.user_id, 0)
+            else:
+                await UserAction.change_user_push(self.tg_user.user_id, 0)
+            await send_notice(self.tg_user.user_id, f"无法向 {cid} 发送消息，已停止推送")
+            await rerun_misskey_bot(self.tg_user.user_id)
+
     async def process_note(self, note: Note, notice: bool = True):
         async with self.lock:
             try:
                 if await NoRepeatRenoteAction.check(self.tg_user.user_id, note):
                     if self.tg_user.chat_id != 0 and self.tg_user.timeline_topic != 0:
-                        msgs = await send_update(
-                            self.tg_user.host,
-                            self.tg_user.chat_id,
-                            note,
-                            self.tg_user.timeline_topic,
-                            True,
-                            spoiler=self.user_config
-                            and self.user_config.timeline_spoiler,
-                        )
+                        msgs = await self.send_update(note, "timeline")
                         await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
                     if self.check_push(note):
-                        msgs = await send_update(
-                            self.tg_user.host,
-                            self.tg_user.push_chat_id,
-                            note,
-                            None,
-                            False,
-                            spoiler=self.user_config and self.user_config.push_spoiler,
-                        )
+                        msgs = await self.send_update(note, "push")
                         await RevokeAction.push(self.tg_user.user_id, note.id, msgs)
                 elif notice:
                     logs.info(f"{self.tg_user.user_id} 跳过重复转发 note {note.id}")

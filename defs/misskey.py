@@ -184,9 +184,14 @@ async def fetch_document(host: str, file: File) -> Optional[str]:
         return file_url
     if file_name.lower().endswith(".webp"):
         file_name = file_name[:-5] + ".jpg"
-        io = webp_to_jpg(req.content).getvalue()
+        io = webp_to_jpg(req.content)
+        file_size = io.tell()
+        io = io.getvalue()
     else:
         io = req.content
+        file_size = len(io)
+    if file_size <= 0:
+        return file_url
     async with aiofiles.open(file_name, "wb") as f:
         await f.write(io)
     add_delete_file_job(file_name)
@@ -394,18 +399,29 @@ async def send_group(
     groups = await get_media_group(host, files, spoiler)
     if len(groups) == 0:
         return [await send_text(host, cid, note, reply_to_message_id, show_second)]
-    photo, video, audio, document, msg_ids = [], [], [], [], []
+    photo, video, audio, document, gif, msg_ids = [], [], [], [], [], []
     for i in groups:
         if isinstance(i, InputMediaPhoto):
             photo.append(i)
-        elif isinstance(i, InputMediaVideo) or isinstance(i, InputMediaAnimation):
+        elif isinstance(i, InputMediaVideo):
             video.append(i)
         elif isinstance(i, InputMediaAudio):
             audio.append(i)
         elif isinstance(i, InputMediaDocument):
             document.append(i)
+        elif isinstance(i, InputMediaAnimation):
+            gif.append(i)
     for i in (photo, video, audio, document):
         msg_ids.extend(await send_group_msg(cid, i, reply_to_message_id))
+    for i in gif:
+        msg_ids.append(
+            await bot.send_animation(
+                cid,
+                i.media,
+                reply_to_message_id=reply_to_message_id,
+                has_spoiler=i.has_spoiler,
+            )
+        )
     tmsg = await send_text(
         host, cid, note, msg_ids[0].id if msg_ids else None, show_second
     )
@@ -472,3 +488,8 @@ async def send_update(
             return await send_group(
                 host, cid, files, note, topic_id, show_second, spoiler
             )
+
+
+async def send_notice(uid: int, text: str) -> Message:
+    with contextlib.suppress(Exception):
+        return await bot.send_message(uid, text)
