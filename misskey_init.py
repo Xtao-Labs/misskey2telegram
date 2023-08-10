@@ -1,11 +1,8 @@
-import asyncio
 import contextlib
 from asyncio import sleep, Lock
-from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Union
 
 from aiohttp import ClientConnectorError
-from firebase_admin.exceptions import InvalidArgumentError
 from mipa.exception import WebSocketNotConnected
 from mipa.ext import commands
 from mipa.router import Router
@@ -15,7 +12,6 @@ from mipac import (
     NotificationFollowRequest,
     NotificationAchievement,
     NoteDeleted,
-    NotificationReaction,
     NotificationNote,
     Route,
 )
@@ -23,23 +19,13 @@ from mipac.client import Client as MisskeyClient
 from pyrogram.errors import ChatWriteForbidden
 from pyrogram.types import Message
 
-from defs.fcm_notice import (
-    send_fcm_user_followed,
-    send_fcm_follow_request,
-    send_fcm_follow_request_accept,
-    send_fcm_achievement_earned,
-    send_fcm_reaction,
-    send_fcm_mention,
-    send_fcm_reply,
-    send_fcm_renote,
-    send_fcm_quote,
-)
 from defs.misskey import send_update, send_notice
 from defs.notice import (
     send_user_followed,
     send_follow_request,
     send_follow_request_accept,
     send_achievement_earned,
+    send_note_mention,
 )
 
 from models.models.user import User, TokenStatusEnum
@@ -167,70 +153,50 @@ class MisskeyBot(commands.Bot):
             await RevokeAction.process_delete_note(self.tg_user.user_id, note.note_id)
         logs.info(f"{self.tg_user.user_id} 处理 note 删除 {note.note_id} 完成")
 
-    async def send_fcm(self, func, notice):
-        logs.info(f"{self.tg_user.user_id} 发送 FCM 通知 {func.__name__}")
-        loop = asyncio.get_event_loop()
-        try:
-            with ThreadPoolExecutor() as executor:
-                await loop.run_in_executor(
-                    executor, func, self.tg_user.fcm_token, notice
-                )
-        except InvalidArgumentError:
-            logs.warning(f"{self.tg_user.user_id} 无效的 FCM Token")
-        except Exception as e:
-            logs.error(e)
-
     async def on_user_followed(self, notice: NotificationFollow):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
             await send_user_followed(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                notice,
+                self.tg_user.notice_topic,
             )
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_user_followed, notice)
 
     async def on_follow_request(self, notice: NotificationFollowRequest):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
             await send_follow_request(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                notice,
+                self.tg_user.notice_topic,
             )
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_follow_request, notice)
 
     async def on_follow_request_accept(self, notice: NotificationFollowRequest):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
             await send_follow_request_accept(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                notice,
+                self.tg_user.notice_topic,
             )
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_follow_request_accept, notice)
 
     async def on_achievement_earned(self, notice: NotificationAchievement):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
             await send_achievement_earned(
-                self.tg_user.chat_id, notice, self.tg_user.notice_topic
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                notice,
+                self.tg_user.notice_topic,
             )
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_achievement_earned, notice)
-
-    async def on_reaction(self, notice: NotificationReaction):
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_reaction, notice)
 
     async def on_mention(self, notice: NotificationNote):
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_mention, notice)
-
-    async def on_reply(self, notice: NotificationNote):
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_reply, notice)
-
-    async def on_renote(self, notice: NotificationNote):
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_renote, notice)
-
-    async def on_quote(self, notice: NotificationNote):
-        if self.tg_user.fcm_token:
-            await self.send_fcm(send_fcm_quote, notice)
+        if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
+            await send_note_mention(
+                self.tg_user.host,
+                self.tg_user.chat_id,
+                notice,
+                self.tg_user.notice_topic,
+            )
 
     @staticmethod
     async def __on_error(event_method: str) -> None:
