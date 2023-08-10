@@ -160,7 +160,7 @@ def deprecated_to_text(func):
 async def fetch_document(host: str, file: File) -> Optional[str]:
     file_name = "downloads/" + file.name
     file_url = file.url
-    if file.size > 10 * 1024 * 1024:
+    if file.size > 100 * 1024 * 1024:
         return file_url
     if not file_url:
         return file_url
@@ -182,16 +182,13 @@ async def fetch_document(host: str, file: File) -> Optional[str]:
             req = await proxy()
     if req.status_code != 200:
         return file_url
+    if len(req.content) <= 0:
+        return file_url
     if file_name.lower().endswith(".webp"):
         file_name = file_name[:-5] + ".jpg"
-        io = webp_to_jpg(req.content)
-        file_size = io.tell()
-        io = io.getvalue()
+        io = webp_to_jpg(req.content).getvalue()
     else:
         io = req.content
-        file_size = len(io)
-    if file_size <= 0:
-        return file_url
     async with aiofiles.open(file_name, "wb") as f:
         await f.write(io)
     add_delete_file_job(file_name)
