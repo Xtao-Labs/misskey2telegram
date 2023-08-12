@@ -157,8 +157,19 @@ def deprecated_to_text(func):
     return wrapper
 
 
+def parse_file_name(file: File) -> str:
+    support_image_map = {"jpeg": "jpg", "webp": "webp", "png": "png"}
+    if file.type.startswith("image"):
+        _, ext = file.type.split("/")
+        if ext in support_image_map:
+            ext = support_image_map[ext]
+            if not file.name.lower().endswith(f".{ext}"):
+                return file.name + f".{ext}"
+    return file.name
+
+
 async def fetch_document(host: str, file: File) -> Optional[str]:
-    file_name = "downloads/" + file.name
+    file_name = "downloads/" + parse_file_name(file)
     file_url = file.url
     if file.size > 100 * 1024 * 1024:
         return file_url
