@@ -18,7 +18,7 @@ class NoRepeatRenoteAction:
     async def check(uid: int, note: Note):
         if await NoRepeatRenoteAction.get(uid, note.id):
             return False
-        if note.renote and (not note.content):
+        if note.renote and (not note.text):
             if await NoRepeatRenoteAction.get(uid, note.renote.id):
                 return False
         return True
@@ -26,5 +26,5 @@ class NoRepeatRenoteAction:
     @staticmethod
     async def set(uid: int, note: Note):
         await NoRepeatRenoteAction.push(uid, note.id)
-        if note.renote and (not note.content):
+        if note.renote and (not note.text):
             await NoRepeatRenoteAction.push(uid, note.renote.id)

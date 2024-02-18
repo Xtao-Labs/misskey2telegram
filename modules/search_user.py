@@ -28,7 +28,8 @@ async def search_user_command(_: Client, message: Message):
         user = await search_user(misskey_bot, username, host)
         if not user:
             return await message.reply("没有找到用户", quote=True)
-        text, button = gen_text(user), gen_button(user)
+        host = misskey_bot.tg_user.host
+        text, button = gen_text(host, user), gen_button(host, user)
         if user.avatar_url:
             try:
                 await message.reply_photo(

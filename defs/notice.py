@@ -1,7 +1,7 @@
 from json import load
 
 from mipac import Note
-from mipac.models.lite.user import LiteUser
+from mipac.models.lite.user import PartialUser
 from mipac.models.notification import (
     NotificationFollow,
     NotificationFollowRequest,
@@ -21,15 +21,15 @@ with open("gen/achievement.json", "r", encoding="utf-8") as f:
     achievement_map = load(f)
 
 
-def get_user_link(host: str, user: LiteUser) -> str:
+def get_user_link(host: str, user: PartialUser) -> str:
     if user.host:
         return f"https://{host}/@{user.username}@{user.host}"
     return f"https://{host}/@{user.username}"
 
 
-def get_user_alink(host: str, user: LiteUser) -> str:
+def get_user_alink(host: str, user: PartialUser) -> str:
     return '<a href="{}">{}</a>'.format(
-        get_user_link(host, user), user.nickname or f"@{user.username}"
+        get_user_link(host, user), user.name or f"@{user.username}"
     )
 
 
@@ -37,7 +37,7 @@ def get_note_link(host: str, note: Note) -> str:
     return f"https://{host}/notes/{note.id}"
 
 
-def gen_link_button(host: str, user: LiteUser = None, note: Note = None):
+def gen_link_button(host: str, user: PartialUser = None, note: Note = None):
     return [
         InlineKeyboardButton(
             text="Link",

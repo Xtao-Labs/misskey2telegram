@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from mipac import UserDetailed
+from mipac import UserDetailedNotMe
 from mipac.errors import FailedToResolveRemoteUserError
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from defs.misskey import get_user_link
 from misskey_init import MisskeyBot
 
 template = """<b>Misskey User Info</b>
@@ -18,18 +19,18 @@ Updated: <code>%s</code>
 📤 %s 粉丝 %s 关注 %s"""
 
 
-def gen_text(user: UserDetailed):
-    def parse_time(time: str) -> str:
+def gen_text(host: str, user: UserDetailedNotMe):
+    def parse_time(time: datetime) -> str:
         if not time:
             return "Unknown"
-        time = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%fZ") + timedelta(hours=8)
+        time = time + timedelta(hours=8)
         return time.strftime("%Y-%m-%d %H:%M:%S")
 
     create_at = parse_time(user.created_at)
     update_at = parse_time(user.updated_at)
     return template % (
-        user.nickname,
-        user.api.action.get_profile_link(),
+        user.name,
+        get_user_link(host, user),
         user.username,
         user.description or "",
         create_at,
@@ -40,9 +41,9 @@ def gen_text(user: UserDetailed):
     )
 
 
-def gen_button(user: UserDetailed):
+def gen_button(host: str, user: UserDetailedNotMe):
     first_line = [
-        InlineKeyboardButton(text="Link", url=user.api.action.get_profile_link()),
+        InlineKeyboardButton(text="Link", url=get_user_link(host, user)),
     ]
     second_line = [
         InlineKeyboardButton(
@@ -55,7 +56,7 @@ def gen_button(user: UserDetailed):
 
 async def search_user(
     misskey_bot: MisskeyBot, username: str, host: str = None
-) -> Optional[UserDetailed]:
+) -> Optional[UserDetailedNotMe]:
     """
     搜索用户
     """

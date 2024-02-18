@@ -7,7 +7,7 @@ from typing import Optional, List
 import aiofiles as aiofiles
 from httpx import AsyncClient
 from mipac import Note, File
-from mipac.models.lite import LiteUser
+from mipac.models.lite import PartialUser
 from pyrogram.enums import ParseMode
 from pyrogram.errors import MediaEmpty, FloodWait
 from pyrogram.types import (
@@ -59,15 +59,15 @@ def gen_button(host: str, note: Note, author: str, show_second: bool):
     )
 
 
-def get_user_link(host: str, user: LiteUser) -> str:
+def get_user_link(host: str, user: PartialUser) -> str:
     if user.host:
         return f"https://{host}/@{user.username}@{user.host}"
     return f"https://{host}/@{user.username}"
 
 
-def get_user_alink(host: str, user: LiteUser) -> str:
+def get_user_alink(host: str, user: PartialUser) -> str:
     return '<a href="{}">{}</a>'.format(
-        get_user_link(host, user), user.nickname or f"@{user.username}"
+        get_user_link(host, user), user.name or f"@{user.username}"
     )
 
 
@@ -85,7 +85,7 @@ def format_at(host: str, content: str) -> str:
 
 
 def get_content(host: str, note: Note) -> str:
-    content = note.content or ""
+    content = note.text or ""
     action = "发表"
     origin = ""
     show_note = note
@@ -95,21 +95,21 @@ def get_content(host: str, note: Note) -> str:
         if content:
             action = "引用"
             content = (
-                f"> {note.renote.content or ''}\n\n=====================\n\n{content}"
+                f"> {note.renote.text or ''}\n\n=====================\n\n{content}"
             )
         else:
-            content = note.renote.content or ""
+            content = note.renote.text or ""
         origin = (
-            f"\n{get_user_alink(host, note.renote.author)} "
+            f"\n{get_user_alink(host, note.renote.user)} "
             f"发表于 {get_post_time(note.renote.created_at)}"
         )
     if note.reply:
         show_note = note.reply
         action = "回复"
-        if note.reply.content:
-            content = f"> {note.reply.content}\n\n=====================\n\n{content}"
+        if note.reply.text:
+            content = f"> {note.reply.text}\n\n=====================\n\n{content}"
         origin = (
-            f"\n{get_user_alink(host, note.reply.author)} "
+            f"\n{get_user_alink(host, note.reply.user)} "
             f"发表于 {get_post_time(note.reply.created_at)}"
         )
     content = format_at(host, content[:768] + " ").strip()
@@ -117,7 +117,7 @@ def get_content(host: str, note: Note) -> str:
 
 {content}
 
-{get_user_alink(host, note.author)} {action}于 {get_post_time(note.created_at)}{origin}
+{get_user_alink(host, note.user)} {action}于 {get_post_time(note.created_at)}{origin}
 点赞: {sum(show_note.reactions.values())} | 回复: {show_note.replies_count} | 转发: {show_note.renote_count}"""
 
 
@@ -141,7 +141,7 @@ async def send_text(
         get_content(host, note),
         reply_to_message_id=reply_to_message_id,
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
         disable_web_page_preview=True,
     )
@@ -225,7 +225,7 @@ async def send_photo(
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
         has_spoiler=spoiler,
     )
@@ -250,7 +250,7 @@ async def send_gif(
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
         has_spoiler=spoiler,
     )
@@ -275,7 +275,7 @@ async def send_video(
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
         has_spoiler=spoiler,
     )
@@ -299,7 +299,7 @@ async def send_audio(
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
     )
 
@@ -322,7 +322,7 @@ async def send_document(
         reply_to_message_id=reply_to_message_id,
         caption=get_content(host, note),
         reply_markup=gen_button(
-            host, note, get_user_link(host, note.author), show_second
+            host, note, get_user_link(host, note.user), show_second
         ),
     )
     with contextlib.suppress(Exception):
