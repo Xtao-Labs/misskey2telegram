@@ -49,7 +49,7 @@ class MisskeyBot(commands.Bot):
 
     async def fetch_offline_notes(self):
         logs.info(f"{self.tg_user.user_id} 开始获取最近十条时间线")
-        data = {"withReplies": False, "limit": 1}
+        data = {"withReplies": False, "limit": 10}
         data = await self.core.http.request(
             Route("POST", "/api/notes/timeline"), auth=True, json=data
         )

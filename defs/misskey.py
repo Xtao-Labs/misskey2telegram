@@ -9,7 +9,8 @@ from httpx import AsyncClient
 from mipac import Note, File
 from mipac.models.lite import PartialUser
 from pyrogram.enums import ParseMode
-from pyrogram.errors import MediaEmpty, FloodWait
+from pyrogram.errors import MediaEmpty, FloodWait, PhotoInvalidDimensions, WebpageCurlFailed, PhotoSaveFileInvalid, \
+    WebpageMediaEmpty, ImageProcessFailed, FilePartMissing
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -26,6 +27,8 @@ from init import bot, logs, headers
 from models.services.scheduler import add_delete_file_job, delete_file
 
 at_parse = re.compile(r"(?<!\S)@(\S+)\s")
+image_parse = re.compile(r"image/(webp|png|jpeg|gif)")
+support_image_map = {"jpeg": "jpg", "webp": "webp", "png": "png"}
 
 
 def get_note_url(host: str, note: Note) -> str:
@@ -151,14 +154,34 @@ def deprecated_to_text(func):
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except MediaEmpty:
+        except ValueError as e:
+            if e.args and e.args[0] == "File size equals to 0 B":
+                return await send_text(args[0], args[1], args[3], args[4], args[5])
+            raise e
+        except (
+                MediaEmpty,
+                WebpageCurlFailed,
+                PhotoSaveFileInvalid,
+                WebpageMediaEmpty,
+                ImageProcessFailed,
+                FilePartMissing,
+        ):
             return await send_text(args[0], args[1], args[3], args[4], args[5])
 
     return wrapper
 
 
+def deprecated_to_document(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except (PhotoInvalidDimensions, ImageProcessFailed, PhotoSaveFileInvalid):
+            return await send_document(args[0], args[1], args[3], args[4], args[5])
+
+    return wrapper
+
+
 def parse_file_name(file: File) -> str:
-    support_image_map = {"jpeg": "jpg", "webp": "webp", "png": "png"}
     if file.type.startswith("image"):
         _, ext = file.type.split("/")
         if ext in support_image_map:
@@ -208,6 +231,7 @@ async def fetch_document(host: str, file: File) -> Optional[str]:
 
 @retry
 @deprecated_to_text
+@deprecated_to_document
 async def send_photo(
     host: str,
     cid: int,
@@ -337,7 +361,7 @@ async def get_media_group(host: str, files: list[File], spoiler: bool) -> list:
         if not file_url:
             continue
         file_type = file_.type
-        if file_type.startswith("image"):
+        if file_type.startswith("image") and image_parse.match(file_type):
             if "gif" in file_type:
                 media_lists.append(
                     InputMediaAnimation(
@@ -458,7 +482,7 @@ async def send_update(
             file = files[0]
             file_type = file.type
             url = await fetch_document(host, file)
-            if file_type.startswith("image"):
+            if file_type.startswith("image") and image_parse.match(file_type):
                 if "gif" in file_type:
                     return await send_gif(
                         host,
