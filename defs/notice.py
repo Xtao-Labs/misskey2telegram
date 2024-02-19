@@ -8,7 +8,7 @@ from mipac.models.notification import (
     NotificationAchievement,
     NotificationNote,
 )
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from init import bot
 
@@ -119,8 +119,8 @@ async def send_note_mention(
     chat_id: int,
     notice: NotificationNote,
     topic_id: int,
-):
-    await bot.send_message(
+) -> Message:
+    return await bot.send_message(
         chat_id,
         mention_template.format(
             get_note_link(host, notice.note),

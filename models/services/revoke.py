@@ -1,4 +1,6 @@
 import base64
+import contextlib
+
 from cashews import cache
 from pyrogram.types import Message
 
@@ -9,9 +11,7 @@ class RevokeAction:
     HOURS: int = 2
 
     @staticmethod
-    def encode_messages(messages: list[Message]) -> str:
-        ids = [str(message.id) for message in messages]
-        cid = messages[0].chat.id
+    def encode_messages(cid: int, ids: list[str]) -> str:
         text = f"{cid}:{','.join(ids)}"
         return base64.b64encode(text.encode()).decode()
 
@@ -22,15 +22,34 @@ class RevokeAction:
         return int(cid), [int(mid) for mid in ids.split(",")]
 
     @staticmethod
+    async def _push(uid: int, note_id: str, cid: int, messages: list[int]):
+        ids = [str(message) for message in messages]
+        await cache.set(
+            f"sub:{uid}:{note_id}",
+            RevokeAction.encode_messages(cid, ids),
+            expire=60 * 60 * RevokeAction.HOURS,
+        )
+
+    @staticmethod
     async def push(uid: int, note_id: str, messages: Message | list[Message]):
         if not messages:
             return
         messages = [messages] if isinstance(messages, Message) else messages
-        await cache.set(
-            f"sub:{uid}:{note_id}",
-            RevokeAction.encode_messages(messages),
-            expire=60 * 60 * RevokeAction.HOURS,
-        )
+        cid = messages[0].chat.id
+        mids = [message.id for message in messages]
+        await RevokeAction._push(uid, note_id, cid, mids)
+
+    @staticmethod
+    async def push_extend(uid: int, note_id: str, messages: Message | list[Message]):
+        if not messages:
+            return
+        messages = [messages] if isinstance(messages, Message) else messages
+        try:
+            cid, mids = await RevokeAction.get(uid, note_id)
+        except ValueError:
+            cid, mids = messages[0].chat.id, []
+        mids.extend([message.id for message in messages])
+        await RevokeAction._push(uid, note_id, cid, mids)
 
     @staticmethod
     async def get(uid: int, note_id: str) -> tuple[int, list[int]]:
@@ -53,7 +72,8 @@ class RevokeAction:
             cid, msgs = await RevokeAction.get(uid, note_id)
         except ValueError:
             return
-        await RevokeAction._delete_message(cid, msgs)
+        with contextlib.suppress(Exception):
+            await RevokeAction._delete_message(cid, msgs)
         await cache.delete(f"sub:{uid}:{note_id}")
 
     @staticmethod

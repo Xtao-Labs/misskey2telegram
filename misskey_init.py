@@ -5,7 +5,6 @@ from typing import Optional, Union
 from aiohttp import ClientConnectorError
 from mipa.exception import WebSocketNotConnected
 from mipa.ext import commands
-from mipa.router import Router
 from mipac import (
     Note,
     NotificationFollow,
@@ -58,12 +57,12 @@ class MisskeyBot(commands.Bot):
             await self.process_note(note, notice=False)
         logs.info(f"{self.tg_user.user_id} 处理完成最近十条时间线")
 
-    async def when_start(self, ws):
-        await Router(ws).connect_channel(["main", "home"])
+    async def when_start(self, _):
+        await self._router.connect_channel(["main", "home"])
         await self.fetch_offline_notes()
         subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
         for sub in subs:
-            await Router(ws).capture_message(sub)
+            await self._router.capture_message(sub)
 
     async def on_ready(self, ws):
         try:
@@ -191,12 +190,14 @@ class MisskeyBot(commands.Bot):
 
     async def on_mention(self, notice: NotificationNote):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
-            await send_note_mention(
+            msg = await send_note_mention(
                 self.tg_user.host,
                 self.tg_user.chat_id,
                 notice,
                 self.tg_user.notice_topic,
             )
+            await RevokeAction.push_extend(self.tg_user.user_id, notice.note.id, msg)
+            await self._router.capture_message(notice.note.id)
 
     @staticmethod
     async def __on_error(event_method: str) -> None:
