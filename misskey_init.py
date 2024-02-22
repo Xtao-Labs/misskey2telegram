@@ -188,8 +188,19 @@ class MisskeyBot(commands.Bot):
                 self.tg_user.notice_topic,
             )
 
+    @staticmethod
+    def ignore_mention(note: NotificationNote) -> bool:
+        new_note = note.note
+        if len(new_note.mentions) >= 3 and \
+                new_note.user.username and len(new_note.user.username) == 10:
+            return True
+        return False
+
     async def on_mention(self, notice: NotificationNote):
         if self.tg_user.chat_id != 0 and self.tg_user.notice_topic != 0:
+            if self.ignore_mention(notice):
+                logs.warning(f"{self.tg_user.user_id} 遇到 spam 轰炸 {notice.note.id}")
+                return
             msg = await send_note_mention(
                 self.tg_user.host,
                 self.tg_user.chat_id,
