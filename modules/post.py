@@ -40,7 +40,7 @@ async def post_photo_command(_: Client, message: Message):
     photo = await message.download()
     try:
         misskey_bot = get_misskey_bot(message.from_user.id)
-        file_ = await misskey_bot.core.api.drive.file.action.upload_file(
+        file_ = await misskey_bot.core.api.drive.files.action.create(
             photo,
             is_sensitive=message.has_media_spoiler or False,
         )

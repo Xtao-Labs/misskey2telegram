@@ -326,7 +326,7 @@
     ],
     "justPlainLucky": [
         "超高校级的幸运",
-        "每 10 秒有 0.01 的概率自动获得",
+        "每 10 秒有 0.005% 的概率自动获得",
         ""
     ],
     "setNameToSyuilo": [
@@ -368,5 +368,25 @@
         "Brain Diver",
         "发布了包含 Brain Diver 链接的帖子",
         "Misskey-Misskey La-Tu-Ma"
+    ],
+    "smashTestNotificationButton": [
+        "过度测试",
+        "短时间内连续测试通知",
+        ""
+    ],
+    "tutorialCompleted": [
+        "Misskey 初学者课程 结业证书",
+        "完成了教学",
+        ""
+    ],
+    "bubbleGameExplodingHead": [
+        "🤯",
+        "你合成出了游戏里最大的Emoji",
+        ""
+    ],
+    "bubbleGameDoubleExplodingHead": [
+        "两个🤯",
+        "你合成出了2个游戏里最大的Emoji",
+        ""
     ]
 }

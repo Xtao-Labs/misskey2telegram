@@ -9,7 +9,7 @@ json_path = Path(__file__).parent / "achievement.json"
 
 def main():
     yml_data = get(
-        "https://cdn.staticaly.com/gh/misskey-dev/misskey/develop/locales/zh-CN.yml"
+        "https://raw.githubusercontent.com/misskey-dev/misskey/develop/locales/zh-CN.yml"
     )
     json_raw_data = yaml.safe_load(yml_data.text)
     json_data = {}
