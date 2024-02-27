@@ -176,7 +176,7 @@ def deprecated_to_document(func):
         try:
             return await func(*args, **kwargs)
         except (PhotoInvalidDimensions, ImageProcessFailed, PhotoSaveFileInvalid):
-            return await send_document(args[0], args[1], args[3], args[4], args[5])
+            return await send_document(args[0], args[1], args[2], args[3], args[4], args[5])
 
     return wrapper
 
