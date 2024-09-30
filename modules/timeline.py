@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 
 from typing import TYPE_CHECKING
 
+from pyrogram import Client, filters
+
 from defs.announcement import UnreadAnnouncement
 from init import bot
 from misskey_init import init_misskey_bot, misskey_bot_map
@@ -32,4 +34,10 @@ async def daily_status():
     for m_bot in misskey_bot_map.values():
         with contextlib.suppress(Exception):
             me = await m_bot.core.api.get_me()
+            me._MeDetailedOnly__client = me._client
             await get_unread_announcements(me, m_bot)
+
+
+@Client.on_message(filters.incoming & filters.private & filters.command(["daily_status"]))
+async def daily_status_command(_: Client, __):
+    await daily_status()
