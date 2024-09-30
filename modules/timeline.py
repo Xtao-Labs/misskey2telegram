@@ -1,4 +1,5 @@
 import contextlib
+from datetime import datetime, timedelta
 
 from typing import TYPE_CHECKING
 
@@ -25,11 +26,10 @@ async def get_unread_announcements(me: "MeDetailed", m_bot: "MisskeyBot"):
             await an.mark_as_read()
 
 
-@scheduler.scheduled_job("cron", minute=30, id="daily_status")
+@scheduler.scheduled_job("cron", minute="*/30", id="daily_status")
+@scheduler.scheduled_job("date", run_date=datetime.now() + timedelta(minutes=1), id="daily_status_start")
 async def daily_status():
     for m_bot in misskey_bot_map.values():
         with contextlib.suppress(Exception):
             me = await m_bot.core.api.get_me()
             await get_unread_announcements(me, m_bot)
-
-
