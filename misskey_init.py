@@ -59,10 +59,10 @@ class MisskeyBot(commands.Bot):
 
     async def when_start(self, _):
         await self._router.connect_channel(["main", "home"])
-        # await self.fetch_offline_notes()
-        # subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
-        # for sub in subs:
-        #     await self._router.capture_message(sub)
+        await self.fetch_offline_notes()
+        subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
+        for sub in subs:
+            await self._router.capture_message(sub)
 
     async def on_ready(self, ws):
         try:
