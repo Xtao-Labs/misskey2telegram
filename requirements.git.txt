@@ -1,2 +1,0 @@
-git+https://github.com/yupix/MiPA.git
-git+https://github.com/yupix/MiPAC.git

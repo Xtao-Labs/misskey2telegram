@@ -1,0 +1,23 @@
+[project]
+name = "misskey2telegram"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyrogram @ git+https://github.com/TeamPGM/pyrogram",
+    "PyrotgCrypto",
+    "httpx",
+    "apscheduler",
+    "sqlalchemy",
+    "sqlmodel",
+    "aiosqlite",
+    "PyYAML",
+    "aiofiles",
+    "pillow",
+    "cashews[redis]",
+    "alembic",
+    "sentry-sdk",
+    "mipa @ git+https://github.com/yupix/MiPA.git",
+    "mipac @ git+https://github.com/yupix/MiPAC.git",
+]

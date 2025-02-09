@@ -12,6 +12,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 DataPath = Path("data")
 DataPath.mkdir(exist_ok=True, parents=True)
+DownloadPath = Path("downloads")
+DownloadPath.mkdir(exist_ok=True, parents=True)
 
 
 class Sqlite:
