@@ -6,7 +6,6 @@ import pyrogram
 from cashews import cache
 
 from glover import api_id, api_hash, ipv6, cache_uri
-from models.services.scheduler import scheduler
 from models.sqlite import Sqlite
 
 # Set Cache
@@ -28,8 +27,6 @@ pyro_logger.addHandler(logging_handler)
 basicConfig(level=INFO)
 logs.setLevel(INFO)
 
-if not scheduler.running:
-    scheduler.start()
 # Init client
 bot = pyrogram.Client(
     "bot", api_id=api_id, api_hash=api_hash, ipv6=ipv6, plugins=dict(root="modules")

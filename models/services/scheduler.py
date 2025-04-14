@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-scheduler = AsyncIOScheduler(timezone="Asia/ShangHai")
+scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
 
 
 async def delete_file(file: str):
