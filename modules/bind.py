@@ -10,7 +10,7 @@ async def pre_check(message: Message):
     if not message.from_user:
         await message.reply("请用普通用户身份执行命令。", quote=True)
         return False
-    if not message.topic:
+    if not message.topic_message or not message.message_thread_id:
         await message.reply("请在论坛群组或者子话题中运行此命令。", quote=True)
         return False
     user = await UserAction.get_user_by_id(message.from_user.id)
@@ -33,7 +33,7 @@ async def bind_timeline_command(_: Client, message: Message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
     if await UserAction.change_user_timeline(
-        message.from_user.id, message.topic.id,
+        message.from_user.id, message.message_thread_id,
     ):
         await message.reply("Timeline 绑定成功。", quote=True)
     else:
@@ -48,7 +48,7 @@ async def bind_notice_command(_: Client, message: Message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
     if await UserAction.change_user_notice(
-        message.from_user.id, message.topic.id,
+        message.from_user.id, message.message_thread_id,
     ):
         await message.reply("Notice 话题绑定成功。", quote=True)
     else:
