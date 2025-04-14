@@ -58,14 +58,14 @@ async def follow_user_callback(_: Client, callback_query: CallbackQuery):
     follow = True
     try:
         misskey_bot = get_misskey_bot(callback_query.from_user.id)
-        await misskey_bot.core.api.follow.action.add(user_id)
+        await misskey_bot.core.api.follow.action.add(user_id=user_id)
         await callback_query.answer("关注成功", show_alert=True)
     except InternalErrorError:
         await callback_query.answer("关注申请未批准，请等待对方同意", show_alert=True)
     except AlreadyFollowingError:
         try:
             misskey_bot = get_misskey_bot(callback_query.from_user.id)
-            await misskey_bot.core.api.follow.action.remove(user_id)
+            await misskey_bot.core.api.follow.action.remove(user_id=user_id)
             await callback_query.answer("取消关注成功", show_alert=True)
             follow = False
         except Exception as e:

@@ -58,11 +58,11 @@ class MisskeyBot(commands.Bot):
         logs.info(f"{self.tg_user.user_id} 处理完成最近十条时间线")
 
     async def when_start(self, _):
-        await self._router.connect_channel(["main", "home"])
+        await self.router.connect_channel(["main", "home"])
         await self.fetch_offline_notes()
         subs = await RevokeAction.get_all_subs(self.tg_user.user_id)
         for sub in subs:
-            await self._router.capture_message(sub)
+            await self.router.capture_message(sub)
 
     async def on_ready(self, ws):
         try:
@@ -89,7 +89,7 @@ class MisskeyBot(commands.Bot):
             return False
         return True
 
-    async def send_update(self, note: Note, send_type: str) -> Message | list[Message]:
+    async def send_update(self, note: Note, send_type: str) -> Message | list[Message] | None:
         cid = (
             self.tg_user.chat_id
             if send_type == "timeline"
@@ -208,7 +208,7 @@ class MisskeyBot(commands.Bot):
                 self.tg_user.notice_topic,
             )
             await RevokeAction.push_extend(self.tg_user.user_id, notice.note.id, msg)
-            await self._router.capture_message(notice.note.id)
+            await self.router.capture_message(notice.note.id)
 
     @staticmethod
     async def __on_error(event_method: str) -> None:

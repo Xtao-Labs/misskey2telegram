@@ -8,10 +8,10 @@ def private_filter(filter_type: str = "timeline"):
     async def func(_, __, update: Update):
         if isinstance(update, Message):
             user_id = update.from_user.id if update.from_user else None
-            topic_id = update.reply_to_top_message_id
+            topic_id = update.topic.id if update.topic else None
         elif isinstance(update, CallbackQuery):
             user_id = update.from_user.id if update.from_user else None
-            topic_id = update.message.reply_to_top_message_id
+            topic_id = update.message.topic.id if update.message.topic else None
         else:
             return False
         if not user_id:

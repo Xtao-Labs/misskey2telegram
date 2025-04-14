@@ -28,7 +28,7 @@ async def delete_command(_: Client, message: Message):
         return
     try:
         misskey_bot = get_misskey_bot(message.from_user.id)
-        await misskey_bot.core.api.note.action.delete(note_id)
+        await misskey_bot.core.api.note.action.delete(note_id=note_id)
         await message.reply("删除成功", quote=True)
     except NoSuchNoteError:
         await message.reply("该嘟文不存在", quote=True)
