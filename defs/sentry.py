@@ -30,6 +30,9 @@ sentry_sdk.init(
         RedisIntegration(),
         SqlalchemyIntegration(),
     ],
+    _experiments={
+        "enable_logs": True,
+    },
 )
 
 

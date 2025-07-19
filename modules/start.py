@@ -7,7 +7,7 @@ from init import bot
 from misskey_init import test_token, rerun_misskey_bot
 from models.services.user import UserAction
 
-des = f"""欢迎使用 {bot.me.first_name}，这是一个用于在 Telegram 上使用 Misskey 的机器人。按下方教程开始使用：
+des = """欢迎使用 Misskey Telegram Bridge，这是一个用于在 Telegram 上使用 Misskey 的机器人。按下方教程开始使用：
 
 1. 使用 `/start https://[misskey_domain]` 设置账号所在 Misskey 实例地址（仅支持 https 链接）
 
