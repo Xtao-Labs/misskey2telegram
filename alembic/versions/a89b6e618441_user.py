@@ -1,10 +1,11 @@
 """user
 
 Revision ID: a89b6e618441
-Revises: 
+Revises:
 Create Date: 2023-07-29 13:05:51.912893
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel

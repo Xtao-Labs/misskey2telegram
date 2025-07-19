@@ -9,8 +9,16 @@ from httpx import AsyncClient
 from mipac import Note, File
 from mipac.models.lite import PartialUser
 from pyrogram.enums import ParseMode
-from pyrogram.errors import MediaEmpty, FloodWait, PhotoInvalidDimensions, WebpageCurlFailed, PhotoSaveFileInvalid, \
-    WebpageMediaEmpty, ImageProcessFailed, FilePartMissing
+from pyrogram.errors import (
+    MediaEmpty,
+    FloodWait,
+    PhotoInvalidDimensions,
+    WebpageCurlFailed,
+    PhotoSaveFileInvalid,
+    WebpageMediaEmpty,
+    ImageProcessFailed,
+    FilePartMissing,
+)
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -159,12 +167,12 @@ def deprecated_to_text(func):
                 return await send_text(args[0], args[1], args[3], args[4], args[5])
             raise e
         except (
-                MediaEmpty,
-                WebpageCurlFailed,
-                PhotoSaveFileInvalid,
-                WebpageMediaEmpty,
-                ImageProcessFailed,
-                FilePartMissing,
+            MediaEmpty,
+            WebpageCurlFailed,
+            PhotoSaveFileInvalid,
+            WebpageMediaEmpty,
+            ImageProcessFailed,
+            FilePartMissing,
         ):
             return await send_text(args[0], args[1], args[3], args[4], args[5])
 
@@ -176,7 +184,9 @@ def deprecated_to_document(func):
         try:
             return await func(*args, **kwargs)
         except (PhotoInvalidDimensions, ImageProcessFailed, PhotoSaveFileInvalid):
-            return await send_document(args[0], args[1], args[2], args[3], args[4], args[5])
+            return await send_document(
+                args[0], args[1], args[2], args[3], args[4], args[5]
+            )
 
     return wrapper
 

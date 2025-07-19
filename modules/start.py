@@ -25,7 +25,7 @@ des = f"""欢迎使用 {bot.me.first_name}，这是一个用于在 Telegram 上�
 
 至此，你便可以在 Telegram 接收 Misskey 消息，同时你可以私聊我使用 /status 查看 Bot 运行状态
 
-此 Bot 仅支持 Misskey V13 实例的账号！"""
+此 Bot 仅支持 Misskey 2023+ 实例的账号！"""
 
 
 async def finish_check(message: Message):
@@ -49,13 +49,17 @@ async def change_host(message: Message, token_or_host: str):
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
-                        InlineKeyboardButton(text="绑定 Misskey 账号", url=gen_url(host)),
+                        InlineKeyboardButton(
+                            text="绑定 Misskey 账号", url=gen_url(host)
+                        ),
                     ]
                 ]
             ),
         )
     else:
-        await message.reply("Host 验证失败，请检查 Host 是否正在运行 Misskey V13", quote=True)
+        await message.reply(
+            "Host 验证失败，请检查 Host 是否正在运行 Misskey 2023+", quote=True
+        )
 
 
 async def change_token(message: Message, token_or_host: str):
@@ -66,7 +70,8 @@ async def change_token(message: Message, token_or_host: str):
                 await UserAction.change_user_token(message.from_user.id, token_or_host)
                 await UserAction.change_instance_user_id(message.from_user.id, me)
                 await message.reply(
-                    "Token 验证成功，绑定账号完成。\n当你撤销此登录时，你可以重新点击按钮授权。", quote=True
+                    "Token 验证成功，绑定账号完成。\n当你撤销此登录时，你可以重新点击按钮授权。",
+                    quote=True,
                 )
                 await finish_check(message)
             else:

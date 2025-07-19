@@ -37,7 +37,9 @@ async def process_user_config(_, message: Message):
         user_config.push_spoiler = data.push_spoiler
         await UserConfigAction.add_user_config(user_config)
     logs.info(f"{message.from_user.id} 更新设置成功")
-    await message.reply("更新设置成功。", quote=True, reply_markup=ReplyKeyboardRemove())
+    await message.reply(
+        "更新设置成功。", quote=True, reply_markup=ReplyKeyboardRemove()
+    )
     await rerun_misskey_bot(message.from_user.id)
 
 

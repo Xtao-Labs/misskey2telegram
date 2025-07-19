@@ -33,7 +33,8 @@ async def bind_timeline_command(_: Client, message: Message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
     if await UserAction.change_user_timeline(
-        message.from_user.id, message.message_thread_id,
+        message.from_user.id,
+        message.message_thread_id,
     ):
         await message.reply("Timeline 绑定成功。", quote=True)
     else:
@@ -48,11 +49,14 @@ async def bind_notice_command(_: Client, message: Message):
         return
     await UserAction.change_user_group_id(message.from_user.id, message.chat.id)
     if await UserAction.change_user_notice(
-        message.from_user.id, message.message_thread_id,
+        message.from_user.id,
+        message.message_thread_id,
     ):
         await message.reply("Notice 话题绑定成功。", quote=True)
     else:
-        await message.reply("Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True)
+        await message.reply(
+            "Notice 话题绑定失败，不能和 Timeline 话题相同。", quote=True
+        )
         return
     await finish_check(message)
 
@@ -96,7 +100,9 @@ async def bind_push_command(client: Client, message: Message):
     if await UserAction.change_user_push(message.from_user.id, push_chat_id):
         await message.reply("Self Timeline Push 对话绑定成功。", quote=True)
     else:
-        await message.reply("Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True)
+        await message.reply(
+            "Self Timeline Push 对话绑定失败，可能已经绑定过了。", quote=True
+        )
     await finish_check(message)
 
 
@@ -108,4 +114,6 @@ async def unbind_push_command(_: Client, message: Message):
         if await UserAction.change_user_push(message.from_user.id, 0):
             await message.reply("Self Timeline Push 对话解绑成功。", quote=True)
         else:
-            await message.reply("Self Timeline Push 对话解绑失败，可能没有绑定。", quote=True)
+            await message.reply(
+                "Self Timeline Push 对话解绑失败，可能没有绑定。", quote=True
+            )

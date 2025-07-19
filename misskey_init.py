@@ -89,7 +89,9 @@ class MisskeyBot(commands.Bot):
             return False
         return True
 
-    async def send_update(self, note: Note, send_type: str) -> Message | list[Message] | None:
+    async def send_update(
+        self, note: Note, send_type: str
+    ) -> Message | list[Message] | None:
         cid = (
             self.tg_user.chat_id
             if send_type == "timeline"
@@ -120,7 +122,9 @@ class MisskeyBot(commands.Bot):
                 await UserAction.change_user_group_id(self.tg_user.user_id, 0)
             else:
                 await UserAction.change_user_push(self.tg_user.user_id, 0)
-            await send_notice(self.tg_user.user_id, f"无法向 {cid} 发送消息，已停止推送")
+            await send_notice(
+                self.tg_user.user_id, f"无法向 {cid} 发送消息，已停止推送"
+            )
             await rerun_misskey_bot(self.tg_user.user_id)
 
     async def process_note(self, note: Note, notice: bool = True):
@@ -191,8 +195,11 @@ class MisskeyBot(commands.Bot):
     @staticmethod
     def ignore_mention(note: NotificationNote) -> bool:
         new_note = note.note
-        if len(new_note.mentions) >= 3 and \
-                new_note.user.username and len(new_note.user.username) == 10:
+        if (
+            len(new_note.mentions) >= 3
+            and new_note.user.username
+            and len(new_note.user.username) == 10
+        ):
             return True
         return False
 

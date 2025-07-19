@@ -29,7 +29,9 @@ async def get_unread_announcements(me: "MeDetailed", m_bot: "MisskeyBot"):
 
 
 @scheduler.scheduled_job("cron", minute="*/30", id="daily_status")
-@scheduler.scheduled_job("date", run_date=datetime.now() + timedelta(minutes=1), id="daily_status_start")
+@scheduler.scheduled_job(
+    "date", run_date=datetime.now() + timedelta(minutes=1), id="daily_status_start"
+)
 async def daily_status():
     for m_bot in misskey_bot_map.values():
         with contextlib.suppress(Exception):
@@ -38,6 +40,8 @@ async def daily_status():
             await get_unread_announcements(me, m_bot)
 
 
-@Client.on_message(filters.incoming & filters.private & filters.command(["daily_status"]))
+@Client.on_message(
+    filters.incoming & filters.private & filters.command(["daily_status"])
+)
 async def daily_status_command(_: Client, __):
     await daily_status()

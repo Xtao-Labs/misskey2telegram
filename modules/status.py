@@ -17,7 +17,9 @@ async def status_command(_: Client, message: Message):
         await message.reply("请先私聊发送 /start ，然后点击按钮绑定账号", quote=True)
         return
     if user.status == TokenStatusEnum.INVALID_TOKEN:
-        await message.reply("Token 无效，请私聊发送 /start ，然后点击按钮重新绑定", quote=True)
+        await message.reply(
+            "Token 无效，请私聊发送 /start ，然后点击按钮重新绑定", quote=True
+        )
         return
     misskey = get_misskey_bot(user.user_id)
     if not misskey and not await rerun_misskey_bot(user.user_id):

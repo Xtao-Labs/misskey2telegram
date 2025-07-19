@@ -24,8 +24,9 @@ async def check_host(host: str) -> bool:
         data = req.json()
         if data["software"]["name"] != "misskey":
             raise ValueError
-        if not data["software"]["version"].startswith("13."):
-            raise ValueError
+        year = int(data["software"]["version"].split(".")[0])
+        if year < 2023:
+            return False
         return True
     except Exception:
         return False

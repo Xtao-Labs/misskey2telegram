@@ -11,7 +11,11 @@ def private_filter(filter_type: str = "timeline"):
             topic_id = update.message_thread_id if update.topic_message else None
         elif isinstance(update, CallbackQuery):
             user_id = update.from_user.id if update.from_user else None
-            topic_id = update.message.message_thread_id if update.message.topic_message else None
+            topic_id = (
+                update.message.message_thread_id
+                if update.message.topic_message
+                else None
+            )
         else:
             return False
         if not user_id:

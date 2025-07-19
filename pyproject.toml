@@ -21,3 +21,8 @@ dependencies = [
     "mipa @ git+https://github.com/yupix/MiPA.git",
     "mipac @ git+https://github.com/yupix/MiPAC.git",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.4",
+]
