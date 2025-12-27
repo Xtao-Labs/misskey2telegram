@@ -43,7 +43,11 @@ def get_note_url(host: str, note: Note) -> str:
     return f"https://{host}/notes/{note.id}"
 
 
-def gen_button(host: str, note: Note, author: str, show_second: bool):
+def gen_button(
+    host: str, note: Note, author: str, show_second: bool
+) -> InlineKeyboardMarkup | None:
+    if not show_second:
+        return None
     source = get_note_url(host, note)
     reply_source = get_note_url(host, note.reply) if note.reply else None
     renote_id = note.renote_id or note.id
@@ -63,11 +67,7 @@ def gen_button(host: str, note: Note, author: str, show_second: bool):
         InlineKeyboardButton(text="❤️", callback_data=f"react:{renote_id}:love"),
         InlineKeyboardButton(text="🌐", callback_data=f"translate:{renote_id}"),
     ]
-    return (
-        InlineKeyboardMarkup([first_line, second_line])
-        if show_second
-        else InlineKeyboardMarkup([first_line])
-    )
+    return InlineKeyboardMarkup([first_line, second_line])
 
 
 def get_user_link(host: str, user: PartialUser) -> str:
@@ -532,6 +532,7 @@ async def send_update(
             )
 
 
-async def send_notice(uid: int, text: str) -> Message:
+async def send_notice(uid: int, text: str) -> Message | None:
     with contextlib.suppress(Exception):
         return await bot.send_message(uid, text)
+    return None
