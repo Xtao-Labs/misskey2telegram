@@ -404,8 +404,8 @@ dependencies = [
 
 [[package]]
 name = "mipac"
-version = "0.7.4+29.g16ebfdf"
-source = { git = "https://github.com/yupix/MiPAC.git#16ebfdfec9f14fde750ae20dbfa15a3d321eec83" }
+version = "0.7.4+22.g26512b1"
+source = { git = "https://github.com/yupix/MiPAC.git?rev=26512b137e08fe193e8a8d77150d321d0c287dc4#26512b137e08fe193e8a8d77150d321d0c287dc4" }
 dependencies = [
     { name = "aiohttp" },
     { name = "versioneer" },
@@ -447,7 +447,7 @@ requires-dist = [
     { name = "cashews", extras = ["redis"] },
     { name = "httpx" },
     { name = "mipa", git = "https://github.com/yupix/MiPA.git" },
-    { name = "mipac", git = "https://github.com/yupix/MiPAC.git" },
+    { name = "mipac", git = "https://github.com/yupix/MiPAC.git?rev=26512b137e08fe193e8a8d77150d321d0c287dc4" },
     { name = "pillow" },
     { name = "pyrogram", git = "https://github.com/TeamPGM/pyrogram" },
     { name = "pyrotgcrypto" },

@@ -18,11 +18,15 @@ dependencies = [
     "cashews[redis]",
     "alembic",
     "sentry-sdk",
-    "mipa @ git+https://github.com/yupix/MiPA.git",
-    "mipac @ git+https://github.com/yupix/MiPAC.git",
+    "mipa",
+    "mipac",
 ]
 
 [dependency-groups]
 dev = [
     "ruff>=0.12.4",
 ]
+
+[tool.uv.sources]
+mipa = { git = "https://github.com/yupix/MiPA.git" }
+mipac = { git = "https://github.com/yupix/MiPAC.git", rev = "26512b137e08fe193e8a8d77150d321d0c287dc4" }

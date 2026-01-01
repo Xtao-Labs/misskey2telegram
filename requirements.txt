@@ -50,7 +50,7 @@ markupsafe==3.0.3
     # via mako
 mipa @ git+https://github.com/yupix/MiPA.git@df7d6c2ce13b32ff8ebd3b31354bff8d3d982f4c
     # via misskey2telegram
-mipac @ git+https://github.com/yupix/MiPAC.git@16ebfdfec9f14fde750ae20dbfa15a3d321eec83
+mipac @ git+https://github.com/yupix/MiPAC.git@26512b137e08fe193e8a8d77150d321d0c287dc4
     # via
     #   mipa
     #   misskey2telegram
