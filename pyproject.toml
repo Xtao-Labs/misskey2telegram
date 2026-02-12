@@ -28,5 +28,5 @@ dev = [
 ]
 
 [tool.uv.sources]
-mipa = { git = "https://github.com/yupix/MiPA.git" }
-mipac = { git = "https://github.com/yupix/MiPAC.git", rev = "26512b137e08fe193e8a8d77150d321d0c287dc4" }
+mipa = { git = "https://github.com/omg-xtao/MiPA.git", branch = "fix/ws" }
+mipac = { git = "https://github.com/yupix/MiPAC.git" }

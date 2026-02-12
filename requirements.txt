@@ -10,11 +10,11 @@ aiosignal==1.4.0
     # via aiohttp
 aiosqlite==0.22.1
     # via misskey2telegram
-alembic==1.17.2
+alembic==1.18.4
     # via misskey2telegram
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.0
+anyio==4.12.1
     # via httpx
 apscheduler==3.11.2
     # via misskey2telegram
@@ -22,7 +22,7 @@ attrs==25.4.0
     # via aiohttp
 cashews==7.4.4
     # via misskey2telegram
-certifi==2025.11.12
+certifi==2026.1.4
     # via
     #   httpcore
     #   httpx
@@ -31,7 +31,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-greenlet==3.3.0 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
+greenlet==3.3.1 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
     # via sqlalchemy
 h11==0.16.0
     # via httpcore
@@ -48,17 +48,17 @@ mako==1.3.10
     # via alembic
 markupsafe==3.0.3
     # via mako
-mipa @ git+https://github.com/yupix/MiPA.git@df7d6c2ce13b32ff8ebd3b31354bff8d3d982f4c
+mipa @ git+https://github.com/omg-xtao/MiPA.git@4159c6b2a868461930aa3045dfcea6e684c7d774
     # via misskey2telegram
-mipac @ git+https://github.com/yupix/MiPAC.git@26512b137e08fe193e8a8d77150d321d0c287dc4
+mipac @ git+https://github.com/yupix/MiPAC.git@16ebfdfec9f14fde750ae20dbfa15a3d321eec83
     # via
     #   mipa
     #   misskey2telegram
-multidict==6.7.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-pillow==12.0.0
+pillow==12.1.1
     # via misskey2telegram
 propcache==0.4.1
     # via yarl
@@ -68,7 +68,7 @@ pydantic==2.12.5
     # via sqlmodel
 pydantic-core==2.41.5
     # via pydantic
-pyrogram @ git+https://github.com/TeamPGM/pyrogram@7985d6ffecc06eb004d860abc6df04ed599ce5dd
+pyrogram @ git+https://github.com/TeamPGM/pyrogram@02b0c27308750e8b8f9c7332050ca10d9a6b0e33
     # via misskey2telegram
 pyrotgcrypto==1.2.7
     # via misskey2telegram
@@ -76,17 +76,17 @@ pysocks==1.7.1
     # via pyrogram
 pyyaml==6.0.3
     # via misskey2telegram
-redis==7.1.0
+redis==7.1.1
     # via cashews
-ruff==0.14.10
-sentry-sdk==2.48.0
+ruff==0.15.0
+sentry-sdk==2.52.0
     # via misskey2telegram
-sqlalchemy==2.0.45
+sqlalchemy==2.0.46
     # via
     #   alembic
     #   misskey2telegram
     #   sqlmodel
-sqlmodel==0.0.30
+sqlmodel==0.0.33
     # via misskey2telegram
 typing-extensions==4.15.0
     # via
@@ -103,7 +103,7 @@ tzdata==2025.3 ; sys_platform == 'win32'
     # via tzlocal
 tzlocal==5.3.1
     # via apscheduler
-urllib3==2.6.2
+urllib3==2.6.3
     # via sentry-sdk
 versioneer==0.29
     # via
